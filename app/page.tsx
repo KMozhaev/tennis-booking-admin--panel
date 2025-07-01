@@ -1,35 +1,65 @@
 "use client"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import AdminCalendar from "../admin-calendar"
-import { AnalyticsView } from "@/components/analytics-view"
-import { ClientsView } from "@/components/clients-view"
 
-export default function Page() {
+import { useState } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { EnhancedAdminCalendar } from "@/components/enhanced-admin-calendar"
+import { AnalyticsView } from "@/components/analytics-view"
+import { CoachManagement } from "@/components/coach-management"
+import { ClientsManagement } from "@/components/clients-management"
+
+export default function TennisAdminDashboard() {
+  const [activeTab, setActiveTab] = useState("calendar")
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <h1 className="text-2xl font-bold text-gray-900">Теннис Парк Сокольники</h1>
-        <p className="text-sm text-gray-600">Административная панель</p>
-      </header>
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Теннис Парк Сокольники</h1>
+            <p className="text-gray-600">Административная панель</p>
+          </div>
+          <div className="text-sm text-gray-500">
+            {new Date().toLocaleDateString("ru-RU", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </div>
+        </div>
+      </div>
 
       <div className="p-6">
-        <Tabs defaultValue="calendar" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="calendar">Календарь</TabsTrigger>
-            <TabsTrigger value="analytics">Аналитика</TabsTrigger>
-            <TabsTrigger value="clients">Клиенты</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="calendar" className="text-sm font-medium">
+              Расписание
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-sm font-medium">
+              Аналитика
+            </TabsTrigger>
+            <TabsTrigger value="coaches" className="text-sm font-medium">
+              Тренеры
+            </TabsTrigger>
+            <TabsTrigger value="clients" className="text-sm font-medium">
+              Клиенты
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="calendar">
-            <AdminCalendar />
+          <TabsContent value="calendar" className="space-y-4">
+            <EnhancedAdminCalendar />
           </TabsContent>
 
-          <TabsContent value="analytics">
+          <TabsContent value="analytics" className="space-y-4">
             <AnalyticsView />
           </TabsContent>
 
-          <TabsContent value="clients">
-            <ClientsView />
+          <TabsContent value="coaches" className="space-y-4">
+            <CoachManagement />
+          </TabsContent>
+
+          <TabsContent value="clients" className="space-y-4">
+            <ClientsManagement />
           </TabsContent>
         </Tabs>
       </div>
