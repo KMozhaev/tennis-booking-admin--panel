@@ -3,12 +3,27 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Filter, X } from "lucide-react"
 
-export type FilterType = "all" | "unpaid" | "trainings" | "courts" | "available"
+export type FilterType = "courts" | "unpaid" | "trainings" | "available" | "all"
 
 interface BookingFiltersProps {
   activeFilters: FilterType[]
   onFilterChange: (filters: FilterType[]) => void
   unpaidCount?: number
+}
+
+const getFilterConfig = (filter: FilterType) => {
+  switch (filter) {
+    case "courts":
+      return { color: "bg-blue-500 text-white hover:bg-blue-600", emoji: "🔵", label: "Корты" }
+    case "unpaid":
+      return { color: "bg-blue-300 text-white hover:bg-blue-400", emoji: "🔵", label: "Неоплаченные" }
+    case "trainings":
+      return { color: "bg-purple-500 text-white hover:bg-purple-600", emoji: "🟣", label: "Тренировки" }
+    case "available":
+      return { color: "bg-green-500 text-white hover:bg-green-600", emoji: "🟢", label: "Свободные" }
+    case "all":
+      return { color: "bg-gray-800 text-white hover:bg-gray-900", emoji: "", label: "Все" }
+  }
 }
 
 export function BookingFilters({ activeFilters, onFilterChange, unpaidCount = 0 }: BookingFiltersProps) {
@@ -46,18 +61,18 @@ export function BookingFilters({ activeFilters, onFilterChange, unpaidCount = 0 
           variant={activeFilters.includes("all") ? "default" : "outline"}
           size="sm"
           onClick={() => toggleFilter("all")}
-          className="h-7 text-xs"
+          className={`h-7 text-xs ${getFilterConfig("all")?.color}`}
         >
-          Все
+          {getFilterConfig("all")?.emoji} {getFilterConfig("all")?.label}
         </Button>
 
         <Button
           variant={activeFilters.includes("unpaid") ? "default" : "outline"}
           size="sm"
           onClick={() => toggleFilter("unpaid")}
-          className="h-7 text-xs bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+          className={`h-7 text-xs ${getFilterConfig("unpaid")?.color}`}
         >
-          Неоплаченные
+          {getFilterConfig("unpaid")?.emoji} {getFilterConfig("unpaid")?.label}
           {unpaidCount > 0 && (
             <Badge className="ml-1 h-4 px-1 text-xs bg-orange-200 text-orange-800">{unpaidCount}</Badge>
           )}
@@ -67,27 +82,27 @@ export function BookingFilters({ activeFilters, onFilterChange, unpaidCount = 0 
           variant={activeFilters.includes("trainings") ? "default" : "outline"}
           size="sm"
           onClick={() => toggleFilter("trainings")}
-          className="h-7 text-xs bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+          className={`h-7 text-xs ${getFilterConfig("trainings")?.color}`}
         >
-          Тренировки
+          {getFilterConfig("trainings")?.emoji} {getFilterConfig("trainings")?.label}
         </Button>
 
         <Button
           variant={activeFilters.includes("courts") ? "default" : "outline"}
           size="sm"
           onClick={() => toggleFilter("courts")}
-          className="h-7 text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+          className={`h-7 text-xs ${getFilterConfig("courts")?.color}`}
         >
-          Корты
+          {getFilterConfig("courts")?.emoji} {getFilterConfig("courts")?.label}
         </Button>
 
         <Button
           variant={activeFilters.includes("available") ? "default" : "outline"}
           size="sm"
           onClick={() => toggleFilter("available")}
-          className="h-7 text-xs bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+          className={`h-7 text-xs ${getFilterConfig("available")?.color}`}
         >
-          Свободные
+          {getFilterConfig("available")?.emoji} {getFilterConfig("available")?.label}
         </Button>
 
         {hasActiveFilters && (

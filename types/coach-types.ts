@@ -23,6 +23,16 @@ export enum SlotStatus {
   BLOCKED = "blocked",
 }
 
+export interface MergedSlot {
+  id: string
+  startTime: string
+  endTime: string
+  duration: number
+  totalPrice: number
+  spanSlots: number
+  originalSlots: BookingSlot[]
+}
+
 export interface BookingSlot {
   id: string
   courtId: string

@@ -9,9 +9,9 @@ import { User, Clock, Plus, Search, CheckCircle, AlertCircle } from "lucide-reac
 import { FinancialSummary } from "./financial-summary"
 import { BookingFilters, type FilterType } from "./booking-filters"
 import { SlotLegend } from "./slot-legend"
-import type { BookingSlot, SlotStatus, DailyFinancials } from "../types/coach-types"
+import type { BookingSlot, SlotStatus, DailyFinancials, MergedSlot } from "../types/coach-types"
 
-// Existing booking interface for backward compatibility
+// Existing interfaces remain the same
 interface Booking {
   id: string
   courtId: string
@@ -94,7 +94,7 @@ const COURTS: Court[] = [
   { id: "5", name: "Корт 5 (Крытый)", type: "indoor", basePrice: 480 },
 ]
 
-// Updated demo clients with realistic recent data
+// Enhanced demo clients with realistic recent data
 const DEMO_CLIENTS: Client[] = [
   {
     id: "1",
@@ -152,73 +152,495 @@ const DEMO_CLIENTS: Client[] = [
   },
 ]
 
-// Updated demo data with new slot structure
-const DEMO_BOOKING_SLOTS: BookingSlot[] = [
+// Comprehensive demo data with 60%+ occupancy
+const ENHANCED_DEMO_DATA: BookingSlot[] = [
+  // Morning slots (08:00-12:00) - 40-50% occupancy
   {
-    id: "1",
-    courtId: "2",
+    id: "demo_001",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "08:00",
+    status: "court_paid" as SlotStatus,
+    clientName: "Анна Петрова",
+    clientPhone: "+7 916 123-45-67",
+    price: 1200,
+    duration: 60,
+  },
+  {
+    id: "demo_002",
+    courtId: "1",
     date: "2025-01-03",
     time: "08:30",
     status: "court_paid" as SlotStatus,
     clientName: "Анна Петрова",
-    price: 1497,
-    duration: 60,
     clientPhone: "+7 916 123-45-67",
-    clientEmail: "anna.petrova@email.ru",
+    price: 0,
+    duration: 60,
   },
   {
-    id: "2",
+    id: "demo_003",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "09:00",
+    status: "training_paid" as SlotStatus,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Михаил Иванов",
+    clientPhone: "+7 903 987-65-43",
+    price: 2500,
+    duration: 90,
+  },
+  {
+    id: "demo_004",
     courtId: "2",
     date: "2025-01-03",
     time: "09:30",
-    status: "court_unpaid" as SlotStatus,
+    status: "training_paid" as SlotStatus,
+    trainerName: "Дмитрий Козлов",
     clientName: "Михаил Иванов",
-    price: 1497,
-    duration: 60,
     clientPhone: "+7 903 987-65-43",
-    clientEmail: "mikhail.ivanov@email.ru",
+    price: 0,
+    duration: 90,
   },
   {
-    id: "3",
-    courtId: "1",
+    id: "demo_005",
+    courtId: "2",
     date: "2025-01-03",
     time: "10:00",
     status: "training_paid" as SlotStatus,
-    trainerName: "Анна Петрова",
-    clientName: "Александр Смирнов",
-    price: 2500,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Михаил Иванов",
+    clientPhone: "+7 903 987-65-43",
+    price: 0,
     duration: 90,
-    clientPhone: "+7 916 555-12-34",
   },
   {
-    id: "4",
+    id: "demo_006",
     courtId: "3",
     date: "2025-01-03",
-    time: "16:00",
-    status: "trainer_reserved" as SlotStatus,
-    trainerName: "Дмитрий Козлов",
+    time: "10:30",
+    status: "court_unpaid" as SlotStatus,
+    clientName: "Елена Смирнова",
+    clientPhone: "+7 925 456-78-90",
+    price: 1440,
     duration: 60,
   },
   {
-    id: "5",
+    id: "demo_007",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "11:00",
+    status: "court_unpaid" as SlotStatus,
+    clientName: "Елена Смирнова",
+    clientPhone: "+7 925 456-78-90",
+    price: 0,
+    duration: 60,
+  },
+  {
+    id: "demo_008",
     courtId: "4",
     date: "2025-01-03",
+    time: "11:30",
+    status: "trainer_reserved" as SlotStatus,
+    trainerName: "Анна Петрова",
+    duration: 60,
+  },
+
+  // Afternoon slots (12:00-18:00) - 60-70% occupancy
+  {
+    id: "demo_009",
+    courtId: "1",
+    date: "2025-01-03",
     time: "12:00",
-    status: "blocked" as SlotStatus,
-    blockReason: "Техническое обслуживание",
+    status: "court_paid" as SlotStatus,
+    clientName: "Игорь Соколов",
+    clientPhone: "+7 921 456-78-90",
+    price: 1200,
+    duration: 90,
+  },
+  {
+    id: "demo_010",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "12:30",
+    status: "court_paid" as SlotStatus,
+    clientName: "Игорь Соколов",
+    clientPhone: "+7 921 456-78-90",
+    price: 0,
+    duration: 90,
+  },
+  {
+    id: "demo_011",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "13:00",
+    status: "court_paid" as SlotStatus,
+    clientName: "Игорь Соколов",
+    clientPhone: "+7 921 456-78-90",
+    price: 0,
+    duration: 90,
+  },
+  {
+    id: "demo_012",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "13:30",
+    status: "training_unpaid" as SlotStatus,
+    trainerName: "Елена Сидорова",
+    clientName: "Мария Федорова",
+    clientPhone: "+7 915 789-01-23",
+    price: 2200,
+    duration: 60,
+  },
+  {
+    id: "demo_013",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "14:00",
+    status: "training_unpaid" as SlotStatus,
+    trainerName: "Елена Сидорова",
+    clientName: "Мария Федорова",
+    clientPhone: "+7 915 789-01-23",
+    price: 0,
+    duration: 60,
+  },
+  {
+    id: "demo_014",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "14:30",
+    status: "court_paid" as SlotStatus,
+    clientName: "Сергей Николаев",
+    clientPhone: "+7 926 678-90-12",
+    price: 1440,
+    duration: 60,
+  },
+  {
+    id: "demo_015",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "15:00",
+    status: "court_paid" as SlotStatus,
+    clientName: "Сергей Николаев",
+    clientPhone: "+7 926 678-90-12",
+    price: 0,
+    duration: 60,
+  },
+  {
+    id: "demo_016",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "15:30",
+    status: "training_paid" as SlotStatus,
+    trainerName: "Михаил Иванов",
+    clientName: "Татьяна Морозова",
+    clientPhone: "+7 918 345-67-89",
+    price: 2800,
+    duration: 90,
+  },
+  {
+    id: "demo_017",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "16:00",
+    status: "training_paid" as SlotStatus,
+    trainerName: "Михаил Иванов",
+    clientName: "Татьяна Морозова",
+    clientPhone: "+7 918 345-67-89",
+    price: 0,
+    duration: 90,
+  },
+  {
+    id: "demo_018",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "16:30",
+    status: "training_paid" as SlotStatus,
+    trainerName: "Михаил Иванов",
+    clientName: "Татьяна Морозова",
+    clientPhone: "+7 918 345-67-89",
+    price: 0,
+    duration: 90,
+  },
+  {
+    id: "demo_019",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "17:00",
+    status: "court_unpaid" as SlotStatus,
+    clientName: "Александр Волков",
+    clientPhone: "+7 909 234-56-78",
+    price: 960,
+    duration: 60,
+  },
+  {
+    id: "demo_020",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "17:30",
+    status: "court_unpaid" as SlotStatus,
+    clientName: "Александр Волков",
+    clientPhone: "+7 909 234-56-78",
+    price: 0,
+    duration: 60,
+  },
+
+  // Peak evening slots (18:00-22:00) - 80-90% occupancy
+  {
+    id: "demo_021",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "18:00",
+    status: "training_paid" as SlotStatus,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Виктор Петров",
+    clientPhone: "+7 916 111-22-33",
+    price: 3000,
     duration: 120,
   },
   {
-    id: "6",
-    courtId: "5",
+    id: "demo_022",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "18:30",
+    status: "training_paid" as SlotStatus,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Виктор Петров",
+    clientPhone: "+7 916 111-22-33",
+    price: 0,
+    duration: 120,
+  },
+  {
+    id: "demo_023",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "19:00",
+    status: "training_paid" as SlotStatus,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Виктор Петров",
+    clientPhone: "+7 916 111-22-33",
+    price: 0,
+    duration: 120,
+  },
+  {
+    id: "demo_024",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "19:30",
+    status: "training_paid" as SlotStatus,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Виктор Петров",
+    clientPhone: "+7 916 111-22-33",
+    price: 0,
+    duration: 120,
+  },
+  {
+    id: "demo_025",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "18:30",
+    status: "court_paid" as SlotStatus,
+    clientName: "Наталья Кузнецова",
+    clientPhone: "+7 925 444-55-66",
+    price: 1560,
+    duration: 90,
+  },
+  {
+    id: "demo_026",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "19:00",
+    status: "court_paid" as SlotStatus,
+    clientName: "Наталья Кузнецова",
+    clientPhone: "+7 925 444-55-66",
+    price: 0,
+    duration: 90,
+  },
+  {
+    id: "demo_027",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "19:30",
+    status: "court_paid" as SlotStatus,
+    clientName: "Наталья Кузнецова",
+    clientPhone: "+7 925 444-55-66",
+    price: 0,
+    duration: 90,
+  },
+  {
+    id: "demo_028",
+    courtId: "3",
     date: "2025-01-03",
     time: "18:00",
     status: "training_unpaid" as SlotStatus,
-    trainerName: "Елена Сидорова",
-    clientName: "Мария Иванова",
-    price: 2200,
+    trainerName: "Анна Петрова",
+    clientName: "Олег Смирнов",
+    clientPhone: "+7 917 777-88-99",
+    price: 2500,
     duration: 60,
-    clientPhone: "+7 925 777-88-99",
+  },
+  {
+    id: "demo_029",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "18:30",
+    status: "training_unpaid" as SlotStatus,
+    trainerName: "Анна Петрова",
+    clientName: "Олег Смирнов",
+    clientPhone: "+7 917 777-88-99",
+    price: 0,
+    duration: 60,
+  },
+  {
+    id: "demo_030",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "19:30",
+    status: "court_paid" as SlotStatus,
+    clientName: "Ирина Васильева",
+    clientPhone: "+7 903 333-44-55",
+    price: 1872,
+    duration: 60,
+  },
+  {
+    id: "demo_031",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "20:00",
+    status: "court_paid" as SlotStatus,
+    clientName: "Ирина Васильева",
+    clientPhone: "+7 903 333-44-55",
+    price: 0,
+    duration: 60,
+  },
+  {
+    id: "demo_032",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "19:00",
+    status: "trainer_reserved" as SlotStatus,
+    trainerName: "Елена Сидорова",
+    duration: 90,
+  },
+  {
+    id: "demo_033",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "19:30",
+    status: "trainer_reserved" as SlotStatus,
+    trainerName: "Елена Сидорова",
+    duration: 90,
+  },
+  {
+    id: "demo_034",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "20:00",
+    status: "trainer_reserved" as SlotStatus,
+    trainerName: "Елена Сидорова",
+    duration: 90,
+  },
+  {
+    id: "demo_035",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "18:30",
+    status: "court_unpaid" as SlotStatus,
+    clientName: "Павел Морозов",
+    clientPhone: "+7 926 666-77-88",
+    price: 1248,
+    duration: 90,
+  },
+  {
+    id: "demo_036",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "19:00",
+    status: "court_unpaid" as SlotStatus,
+    clientName: "Павел Морозов",
+    clientPhone: "+7 926 666-77-88",
+    price: 0,
+    duration: 90,
+  },
+  {
+    id: "demo_037",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "19:30",
+    status: "court_unpaid" as SlotStatus,
+    clientName: "Павел Морозов",
+    clientPhone: "+7 926 666-77-88",
+    price: 0,
+    duration: 90,
+  },
+  {
+    id: "demo_038",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "20:30",
+    status: "training_paid" as SlotStatus,
+    trainerName: "Михаил Иванов",
+    clientName: "Светлана Попова",
+    clientPhone: "+7 915 222-33-44",
+    price: 2800,
+    duration: 60,
+  },
+  {
+    id: "demo_039",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "21:00",
+    status: "training_paid" as SlotStatus,
+    trainerName: "Михаил Иванов",
+    clientName: "Светлана Попова",
+    clientPhone: "+7 915 222-33-44",
+    price: 0,
+    duration: 60,
+  },
+
+  // Additional scattered bookings for realistic distribution
+  {
+    id: "demo_040",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "20:30",
+    status: "court_paid" as SlotStatus,
+    clientName: "Андрей Козлов",
+    clientPhone: "+7 917 888-99-00",
+    price: 1248,
+    duration: 60,
+  },
+  {
+    id: "demo_041",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "21:00",
+    status: "court_paid" as SlotStatus,
+    clientName: "Андрей Козлов",
+    clientPhone: "+7 917 888-99-00",
+    price: 0,
+    duration: 60,
+  },
+  {
+    id: "demo_042",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "20:30",
+    status: "court_unpaid" as SlotStatus,
+    clientName: "Юлия Сидорова",
+    clientPhone: "+7 925 555-66-77",
+    price: 1560,
+    duration: 60,
+  },
+  {
+    id: "demo_043",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "21:00",
+    status: "court_unpaid" as SlotStatus,
+    clientName: "Юлия Сидорова",
+    clientPhone: "+7 925 555-66-77",
+    price: 0,
+    duration: 60,
   },
 ]
 
@@ -244,7 +666,7 @@ const getSlotColors = (status: SlotStatus) => {
     case "court_paid":
       return "bg-blue-500 text-white hover:bg-blue-600"
     case "court_unpaid":
-      return "bg-orange-500 text-white hover:bg-orange-600"
+      return "bg-blue-300 text-white hover:bg-blue-400"
     case "training_paid":
       return "bg-purple-500 text-white hover:bg-purple-600"
     case "training_unpaid":
@@ -258,6 +680,64 @@ const getSlotColors = (status: SlotStatus) => {
   }
 }
 
+// Slot merging algorithm for training sessions
+const mergeTrainingSlots = (slots: BookingSlot[], courtId: string, date: string): MergedSlot[] => {
+  const courtSlots = slots.filter((s) => s.courtId === courtId && s.date === date)
+  const mergedSlots: MergedSlot[] = []
+  const processed = new Set<string>()
+
+  for (const slot of courtSlots) {
+    if (processed.has(slot.id) || (!slot.status.includes("training") && slot.status !== "trainer_reserved")) {
+      continue
+    }
+
+    // Find consecutive slots for same trainer/client
+    const consecutiveSlots = [slot]
+    processed.add(slot.id)
+
+    let currentTime = slot.time
+    while (true) {
+      const [hours, minutes] = currentTime.split(":").map(Number)
+      const nextMinutes = minutes + 30
+      const nextHours = hours + Math.floor(nextMinutes / 60)
+      const finalMinutes = nextMinutes % 60
+      const nextTime = `${nextHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`
+
+      const nextSlot = courtSlots.find(
+        (s) =>
+          s.time === nextTime &&
+          s.trainerName === slot.trainerName &&
+          s.clientName === slot.clientName &&
+          s.status === slot.status &&
+          !processed.has(s.id),
+      )
+
+      if (!nextSlot) break
+
+      consecutiveSlots.push(nextSlot)
+      processed.add(nextSlot.id)
+      currentTime = nextTime
+    }
+
+    if (consecutiveSlots.length > 1) {
+      const totalPrice = consecutiveSlots.reduce((sum, s) => sum + (s.price || 0), 0)
+      const duration = consecutiveSlots.length * 30
+
+      mergedSlots.push({
+        id: `merged-${slot.id}`,
+        startTime: slot.time,
+        endTime: consecutiveSlots[consecutiveSlots.length - 1].time,
+        duration,
+        totalPrice,
+        spanSlots: consecutiveSlots.length,
+        originalSlots: consecutiveSlots,
+      })
+    }
+  }
+
+  return mergedSlots
+}
+
 export function EnhancedAdminCalendar() {
   const [selectedDate, setSelectedDate] = useState("2025-01-03")
   const [courtTypeFilter, setCourtTypeFilter] = useState<"all" | "hard" | "clay" | "indoor">("all")
@@ -268,7 +748,7 @@ export function EnhancedAdminCalendar() {
   const [showSlotChoiceModal, setShowSlotChoiceModal] = useState(false)
   const [showClientBookingModal, setShowClientBookingModal] = useState(false)
   const [slotClickData, setSlotClickData] = useState<SlotClickChoice | null>(null)
-  const [bookingSlots, setBookingSlots] = useState<BookingSlot[]>(DEMO_BOOKING_SLOTS)
+  const [bookingSlots, setBookingSlots] = useState<BookingSlot[]>(ENHANCED_DEMO_DATA)
   const [clients] = useState<Client[]>(DEMO_CLIENTS)
   const [clientSearch, setClientSearch] = useState("")
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
@@ -345,6 +825,16 @@ export function EnhancedAdminCalendar() {
     )
   }, [clients, clientSearch])
 
+  // Get merged slots for each court
+  const mergedSlotsByCourtAndDate = useMemo(() => {
+    const merged: Record<string, MergedSlot[]> = {}
+    for (const court of COURTS) {
+      const key = `${court.id}-${selectedDate}`
+      merged[key] = mergeTrainingSlots(bookingSlots, court.id, selectedDate)
+    }
+    return merged
+  }, [bookingSlots, selectedDate])
+
   // Get slot data for specific court and time
   const getSlotData = (courtId: string, date: string, time: string): BookingSlot => {
     const existingSlot = bookingSlots.find(
@@ -369,26 +859,35 @@ export function EnhancedAdminCalendar() {
     }
   }
 
+  // Check if slot is part of a merged training session
+  const isSlotMerged = (courtId: string, time: string): MergedSlot | null => {
+    const mergedSlots = mergedSlotsByCourtAndDate[`${courtId}-${selectedDate}`] || []
+    return mergedSlots.find((merged) => merged.originalSlots.some((slot) => slot.time === time)) || null
+  }
+
+  // Check if slot is the first slot of a merged training session
+  const isFirstSlotOfMerged = (courtId: string, time: string): boolean => {
+    const merged = isSlotMerged(courtId, time)
+    return merged ? merged.startTime === time : false
+  }
+
   // Filter slots based on active filters
   const shouldShowSlot = (slot: BookingSlot): boolean => {
     if (activeFilters.includes("all")) return true
-
-    if (activeFilters.includes("unpaid") && (slot.status === "court_unpaid" || slot.status === "training_unpaid")) {
-      return true
-    }
-
-    if (
-      activeFilters.includes("trainings") &&
-      (slot.status === "training_paid" || slot.status === "training_unpaid" || slot.status === "trainer_reserved")
-    ) {
-      return true
-    }
 
     if (activeFilters.includes("courts") && (slot.status === "court_paid" || slot.status === "court_unpaid")) {
       return true
     }
 
-    if (activeFilters.includes("available") && slot.status === "free") {
+    if (activeFilters.includes("unpaid") && (slot.status === "court_unpaid" || slot.status === "training_unpaid")) {
+      return true
+    }
+
+    if (activeFilters.includes("trainings") && (slot.status === "training_paid" || slot.status === "training_unpaid")) {
+      return true
+    }
+
+    if (activeFilters.includes("available") && slot.status === "trainer_reserved") {
       return true
     }
 
@@ -555,21 +1054,33 @@ export function EnhancedAdminCalendar() {
 
     const coach = COACHES.find((c) => c.id === newTrainingSession.coachId)
 
-    const newSlot: BookingSlot = {
-      id: Date.now().toString(),
-      courtId: newTrainingSession.courtId,
-      date: newTrainingSession.date,
-      time: newTrainingSession.startTime,
-      status: "trainer_reserved" as SlotStatus,
-      trainerName: coach?.name,
-      duration: newTrainingSession.duration,
+    // Generate slots for minimum 60 minutes
+    const slotsNeeded = Math.max(2, newTrainingSession.duration / 30) // Minimum 2 slots (60 min)
+    const newSlots: BookingSlot[] = []
+
+    for (let i = 0; i < slotsNeeded; i++) {
+      const [hours, minutes] = newTrainingSession.startTime.split(":").map(Number)
+      const slotMinutes = minutes + i * 30
+      const slotHours = hours + Math.floor(slotMinutes / 60)
+      const finalMinutes = slotMinutes % 60
+      const slotTime = `${slotHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`
+
+      newSlots.push({
+        id: `${Date.now()}-${i}`,
+        courtId: newTrainingSession.courtId,
+        date: newTrainingSession.date,
+        time: slotTime,
+        status: "trainer_reserved" as SlotStatus,
+        trainerName: coach?.name,
+        duration: newTrainingSession.duration,
+      })
     }
 
     setBookingSlots([
       ...bookingSlots.filter(
-        (s) => !(s.courtId === newSlot.courtId && s.date === newSlot.date && s.time === newSlot.time),
+        (s) => !newSlots.some((ns) => ns.courtId === s.courtId && ns.date === s.date && ns.time === s.time),
       ),
-      newSlot,
+      ...newSlots,
     ])
 
     setShowTrainingModal(false)
@@ -585,7 +1096,37 @@ export function EnhancedAdminCalendar() {
     })
   }
 
-  const renderSlotContent = (slot: BookingSlot) => {
+  const renderSlotContent = (slot: BookingSlot, merged?: MergedSlot) => {
+    if (merged) {
+      // Render merged training session content
+      const originalSlot = merged.originalSlots[0]
+      return (
+        <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
+          <div className="font-bold text-sm truncate flex items-center gap-1">
+            <User className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{originalSlot.trainerName}</span>
+          </div>
+          {originalSlot.clientName ? (
+            <div className="text-xs opacity-75 truncate mt-1 flex items-center gap-1">
+              {originalSlot.status === "training_paid" ? (
+                <CheckCircle className="h-3 w-3 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-3 w-3 flex-shrink-0" />
+              )}
+              <span className="truncate">{originalSlot.clientName}</span>
+            </div>
+          ) : (
+            <div className="text-xs opacity-75 mt-1">Доступно</div>
+          )}
+          <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
+            <Clock className="h-3 w-3 flex-shrink-0" />
+            <span>{merged.duration} мин</span>
+          </div>
+          {merged.totalPrice > 0 && <div className="text-xs font-semibold mt-1">{merged.totalPrice}₽</div>}
+        </div>
+      )
+    }
+
     switch (slot.status) {
       case "free":
         return (
@@ -596,58 +1137,43 @@ export function EnhancedAdminCalendar() {
         )
 
       case "court_paid":
+        return (
+          <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
+            <div className="font-bold text-sm truncate">{slot.clientName}</div>
+            <div className="text-xs mt-1">✅</div>
+          </div>
+        )
+
       case "court_unpaid":
         return (
           <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-            <div className="font-bold text-sm truncate flex items-center gap-1">
-              {slot.status === "court_paid" ? (
-                <CheckCircle className="h-3 w-3 flex-shrink-0" />
-              ) : (
-                <AlertCircle className="h-3 w-3 flex-shrink-0" />
-              )}
-              <span className="truncate">{slot.clientName}</span>
-            </div>
-            <div className="text-xs opacity-90 mt-1">{slot.duration} мин</div>
-            <div className="text-xs font-semibold mt-1">{slot.price}₽</div>
+            <div className="font-bold text-sm truncate">{slot.clientName}</div>
+            <div className="text-xs mt-1">⏳</div>
           </div>
         )
 
       case "training_paid":
+        return (
+          <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
+            <div className="font-bold text-xs truncate">{slot.trainerName}</div>
+            <div className="text-xs truncate">{slot.clientName}</div>
+            <div className="text-xs mt-1">✅</div>
+          </div>
+        )
+
       case "training_unpaid":
         return (
           <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-            <div className="font-bold text-sm truncate flex items-center gap-1">
-              <User className="h-3 w-3 flex-shrink-0" />
-              <span className="truncate">{slot.trainerName}</span>
-            </div>
-            {slot.clientName && (
-              <div className="text-xs opacity-75 truncate mt-1 flex items-center gap-1">
-                {slot.status === "training_paid" ? (
-                  <CheckCircle className="h-3 w-3 flex-shrink-0" />
-                ) : (
-                  <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                )}
-                <span className="truncate">{slot.clientName}</span>
-              </div>
-            )}
-            <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
-              <Clock className="h-3 w-3 flex-shrink-0" />
-              <span>{slot.duration} мин</span>
-            </div>
+            <div className="font-bold text-xs truncate">{slot.trainerName}</div>
+            <div className="text-xs truncate">{slot.clientName}</div>
+            <div className="text-xs mt-1">⏳</div>
           </div>
         )
 
       case "trainer_reserved":
         return (
           <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-            <div className="font-bold text-sm truncate flex items-center gap-1">
-              <User className="h-3 w-3 flex-shrink-0" />
-              <span className="truncate">{slot.trainerName}</span>
-            </div>
-            <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
-              <Clock className="h-3 w-3 flex-shrink-0" />
-              <span>{slot.duration} мин</span>
-            </div>
+            <div className="font-bold text-sm truncate">{slot.trainerName}</div>
             <div className="text-xs opacity-75 mt-1">Доступно</div>
           </div>
         )
@@ -743,7 +1269,7 @@ export function EnhancedAdminCalendar() {
           {/* Time slots */}
           {TIME_SLOTS.map((time) => (
             <React.Fragment key={time}>
-              {/* Time label */}
+              {/* Time label - ALWAYS WHITE */}
               <div className="bg-white text-sm font-semibold py-2 px-3 text-right sticky left-0 z-10 border-r border-b border-gray-300 flex items-center justify-end text-gray-700">
                 {time}
               </div>
@@ -752,6 +1278,8 @@ export function EnhancedAdminCalendar() {
               {filteredCourts.map((court) => {
                 const slot = getSlotData(court.id, selectedDate, time)
                 const shouldShow = shouldShowSlot(slot)
+                const merged = isSlotMerged(court.id, time)
+                const isFirstOfMerged = isFirstSlotOfMerged(court.id, time)
 
                 if (!shouldShow && !activeFilters.includes("all")) {
                   return (
@@ -762,6 +1290,11 @@ export function EnhancedAdminCalendar() {
                   )
                 }
 
+                // If this is part of a merged slot but not the first, don't render
+                if (merged && !isFirstOfMerged) {
+                  return null
+                }
+
                 const slotClass = `relative text-xs border-r border-b border-gray-300 transition-all hover:shadow-md cursor-pointer ${getSlotColors(slot.status)}`
 
                 return (
@@ -770,8 +1303,16 @@ export function EnhancedAdminCalendar() {
                     onClick={() => handleSlotClick(slot)}
                     className={slotClass}
                     disabled={slot.status === "blocked"}
+                    style={
+                      merged && isFirstOfMerged
+                        ? {
+                            gridRowEnd: `span ${merged.spanSlots}`,
+                            zIndex: 1,
+                          }
+                        : {}
+                    }
                   >
-                    {renderSlotContent(slot)}
+                    {renderSlotContent(slot, merged || undefined)}
                   </button>
                 )
               })}
@@ -783,6 +1324,7 @@ export function EnhancedAdminCalendar() {
       {/* Slot Legend */}
       <SlotLegend />
 
+      {/* All existing modals remain the same */}
       {/* Slot Choice Modal */}
       {showSlotChoiceModal && (
         <Dialog open={showSlotChoiceModal} onOpenChange={setShowSlotChoiceModal}>
@@ -1127,12 +1669,13 @@ export function EnhancedAdminCalendar() {
                   <option value={90}>90 минут</option>
                   <option value={120}>120 минут</option>
                 </select>
+                <p className="text-xs text-gray-500 mt-1">Минимальная длительность тренировки: 60 минут</p>
               </div>
 
               <div className="bg-purple-50 p-4 rounded-md">
                 <p className="text-sm text-purple-800">
-                  <strong>Примечание:</strong> Это создаст зарезервированный слот для тренера. Клиенты смогут
-                  забронировать этот слот отдельно.
+                  <strong>Примечание:</strong> Это создаст зарезервированные слоты для тренера минимум на 60 минут.
+                  Клиенты смогут забронировать эти слоты отдельно.
                 </p>
               </div>
 
