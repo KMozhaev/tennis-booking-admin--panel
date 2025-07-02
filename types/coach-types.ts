@@ -13,6 +13,37 @@ export interface Coach {
   description?: string
 }
 
+export enum SlotStatus {
+  FREE = "free",
+  COURT_PAID = "court_paid",
+  COURT_UNPAID = "court_unpaid",
+  TRAINING_PAID = "training_paid",
+  TRAINING_UNPAID = "training_unpaid",
+  TRAINER_RESERVED = "trainer_reserved",
+}
+
+export type BookingType = "court" | "training" | "trainer_available" | "free"
+export type PaymentStatus = "paid" | "unpaid"
+
+export interface BookingSlot {
+  id: string
+  courtId: string
+  date: string
+  time: string
+  type: BookingType
+  paymentStatus?: PaymentStatus
+  isFirstSlot: boolean
+  isContinuation: boolean
+  totalDuration: number // 30, 60, 90, 120 minutes
+  spanRows: number // 1, 2, 3, 4 slots
+  price?: number
+  clientName?: string
+  trainerName?: string
+  clientPhone?: string
+  clientEmail?: string
+  notes?: string
+}
+
 export interface TrainingSession {
   id: string
   coachId: string
@@ -23,6 +54,7 @@ export interface TrainingSession {
   duration: number // minutes
   totalPrice: number // court + coach rate
   status: "available" | "booked" | "completed" | "cancelled"
+  paymentStatus?: "paid" | "unpaid"
   clientInfo?: {
     name: string
     phone: string
@@ -39,6 +71,13 @@ export interface CoachAvailability {
   endTime: string
   isRecurring: boolean
   exceptions: Date[] // unavailable dates
+}
+
+export interface DailyFinancials {
+  totalPaid: number
+  totalUnpaid: number
+  unpaidCount: number
+  occupancyRate: number
 }
 
 export const SPECIALIZATIONS = [

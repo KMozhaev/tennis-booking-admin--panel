@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { User, Clock, Plus, Search } from "lucide-react"
-import type { TrainingSession } from "../types/coach-types"
+import { User, Clock, Plus, Search, CheckCircle, AlertCircle } from "lucide-react"
+import { FinancialSummary } from "./financial-summary"
+import { BookingFilters, type FilterType } from "./booking-filters"
+import { SlotLegend } from "./slot-legend"
+import type { BookingSlot, BookingType, PaymentStatus, DailyFinancials } from "../types/coach-types"
 
-// Existing booking interface
+// Existing booking interface for backward compatibility
 interface Booking {
   id: string
   courtId: string
@@ -101,30 +104,30 @@ const DEMO_CLIENTS: Client[] = [
     totalBookings: 24,
     totalSpent: 48600,
     status: "vip",
-    lastBooking: "2025-01-01", // 2 days ago
+    lastBooking: "2025-01-01",
     registrationDate: "2024-01-15",
   },
   {
     id: "2",
-    name: "Михаил Иванов",
+    name: "Михаил Волков",
     phone: "+7 903 987-65-43",
-    email: "mikhail.ivanov@email.ru",
-    totalBookings: 12,
-    totalSpent: 18900,
+    email: "mikhail.volkov@gmail.com",
+    totalBookings: 18,
+    totalSpent: 32400,
     status: "active",
-    lastBooking: "2024-12-28", // 5 days ago
-    registrationDate: "2024-03-10",
+    lastBooking: "2024-12-30",
+    registrationDate: "2024-02-20",
   },
   {
     id: "3",
     name: "Елена Смирнова",
     phone: "+7 925 456-78-90",
-    email: "elena.smirnova@email.ru",
-    totalBookings: 8,
-    totalSpent: 12400,
+    email: "elena.smirnova@yandex.ru",
+    totalBookings: 15,
+    totalSpent: 28750,
     status: "active",
-    lastBooking: "2024-12-25", // 1 week ago
-    registrationDate: "2024-04-05",
+    lastBooking: "2024-12-28",
+    registrationDate: "2024-03-10",
   },
   {
     id: "4",
@@ -134,134 +137,774 @@ const DEMO_CLIENTS: Client[] = [
     totalBookings: 45,
     totalSpent: 89200,
     status: "vip",
-    lastBooking: "2024-12-30", // 3 days ago
+    lastBooking: "2024-12-31",
     registrationDate: "2023-08-20",
   },
   {
     id: "5",
-    name: "Ольга Васильева",
-    phone: "+7 912 345-67-89",
-    totalBookings: 3,
-    totalSpent: 4500,
-    status: "inactive",
-    lastBooking: "2024-11-15", // 1.5 months ago
-    registrationDate: "2024-05-01",
+    name: "Мария Иванова",
+    phone: "+7 926 345-67-89",
+    email: "maria.ivanova@gmail.com",
+    totalBookings: 22,
+    totalSpent: 41800,
+    status: "active",
+    lastBooking: "2025-01-02",
+    registrationDate: "2024-01-05",
   },
   {
     id: "6",
     name: "Сергей Николаев",
-    phone: "+7 926 678-90-12",
+    phone: "+7 915 678-90-12",
     email: "sergey.nikolaev@email.ru",
-    totalBookings: 18,
-    totalSpent: 32400,
-    status: "active",
-    lastBooking: "2024-12-20", // 2 weeks ago
-    registrationDate: "2024-02-14",
+    totalBookings: 31,
+    totalSpent: 67500,
+    status: "vip",
+    lastBooking: "2025-01-01",
+    registrationDate: "2023-11-15",
   },
   {
     id: "7",
-    name: "Мария Федорова",
-    phone: "+7 915 789-01-23",
-    email: "maria.fedorova@email.ru",
-    totalBookings: 35,
-    totalSpent: 67500,
-    status: "vip",
-    lastBooking: "2024-12-31", // 2 days ago
-    registrationDate: "2023-11-08",
+    name: "Ольга Морозова",
+    phone: "+7 903 789-01-23",
+    email: "olga.morozova@yandex.ru",
+    totalBookings: 12,
+    totalSpent: 23400,
+    status: "active",
+    lastBooking: "2024-12-29",
+    registrationDate: "2024-04-12",
   },
   {
     id: "8",
-    name: "Александр Волков",
-    phone: "+7 909 234-56-78",
-    totalBookings: 6,
-    totalSpent: 8900,
+    name: "Павел Новиков",
+    phone: "+7 916 890-12-34",
+    email: "pavel.novikov@gmail.com",
+    totalBookings: 8,
+    totalSpent: 15600,
     status: "active",
-    lastBooking: "2024-12-15", // 2.5 weeks ago
-    registrationDate: "2024-06-12",
+    lastBooking: "2024-12-27",
+    registrationDate: "2024-05-20",
   },
   {
     id: "9",
-    name: "Татьяна Морозова",
-    phone: "+7 918 345-67-89",
-    email: "tatyana.morozova@email.ru",
-    totalBookings: 52,
-    totalSpent: 124800,
-    status: "vip",
-    lastBooking: "2025-01-01", // 2 days ago
-    registrationDate: "2023-05-20",
+    name: "Светлана Кузнецова",
+    phone: "+7 925 901-23-45",
+    email: "svetlana.kuznetsova@email.ru",
+    totalBookings: 19,
+    totalSpent: 36750,
+    status: "active",
+    lastBooking: "2025-01-02",
+    registrationDate: "2024-02-28",
   },
   {
     id: "10",
-    name: "Игорь Соколов",
-    phone: "+7 921 456-78-90",
-    totalBookings: 4,
-    totalSpent: 6200,
-    status: "inactive",
-    lastBooking: "2024-10-08", // 3 months ago
-    registrationDate: "2024-07-15",
+    name: "Игорь Лебедев",
+    phone: "+7 917 012-34-56",
+    email: "igor.lebedev@yandex.ru",
+    totalBookings: 27,
+    totalSpent: 52300,
+    status: "vip",
+    lastBooking: "2025-01-01",
+    registrationDate: "2023-09-10",
+  },
+  {
+    id: "11",
+    name: "Татьяна Федорова",
+    phone: "+7 926 123-45-67",
+    email: "tatyana.fedorova@gmail.com",
+    totalBookings: 14,
+    totalSpent: 26800,
+    status: "active",
+    lastBooking: "2024-12-30",
+    registrationDate: "2024-03-15",
+  },
+  {
+    id: "12",
+    name: "Алексей Орлов",
+    phone: "+7 915 234-56-78",
+    email: "alexey.orlov@email.ru",
+    totalBookings: 33,
+    totalSpent: 71200,
+    status: "vip",
+    lastBooking: "2025-01-02",
+    registrationDate: "2023-07-22",
+  },
+  {
+    id: "13",
+    name: "Наталья Попова",
+    phone: "+7 903 345-67-89",
+    email: "natalya.popova@yandex.ru",
+    totalBookings: 11,
+    totalSpent: 19500,
+    status: "active",
+    lastBooking: "2024-12-26",
+    registrationDate: "2024-06-08",
+  },
+  {
+    id: "14",
+    name: "Владимир Соколов",
+    phone: "+7 916 456-78-90",
+    email: "vladimir.sokolov@gmail.com",
+    totalBookings: 25,
+    totalSpent: 48900,
+    status: "active",
+    lastBooking: "2025-01-01",
+    registrationDate: "2024-01-30",
+  },
+  {
+    id: "15",
+    name: "Ирина Павлова",
+    phone: "+7 925 567-89-01",
+    email: "irina.pavlova@email.ru",
+    totalBookings: 16,
+    totalSpent: 31200,
+    status: "active",
+    lastBooking: "2024-12-31",
+    registrationDate: "2024-04-18",
+  },
+  {
+    id: "16",
+    name: "Андрей Козлов",
+    phone: "+7 917 678-90-12",
+    email: "andrey.kozlov@yandex.ru",
+    totalBookings: 29,
+    totalSpent: 58700,
+    status: "vip",
+    lastBooking: "2025-01-02",
+    registrationDate: "2023-10-05",
+  },
+  {
+    id: "17",
+    name: "Екатерина Волкова",
+    phone: "+7 926 789-01-23",
+    email: "ekaterina.volkova@gmail.com",
+    totalBookings: 13,
+    totalSpent: 24600,
+    status: "active",
+    lastBooking: "2024-12-28",
+    registrationDate: "2024-05-12",
+  },
+  {
+    id: "18",
+    name: "Максим Петров",
+    phone: "+7 915 890-12-34",
+    email: "maxim.petrov@email.ru",
+    totalBookings: 21,
+    totalSpent: 42300,
+    status: "active",
+    lastBooking: "2025-01-01",
+    registrationDate: "2024-02-14",
+  },
+  {
+    id: "19",
+    name: "Юлия Сидорова",
+    phone: "+7 903 901-23-45",
+    email: "yulia.sidorova@yandex.ru",
+    totalBookings: 17,
+    totalSpent: 33800,
+    status: "active",
+    lastBooking: "2024-12-29",
+    registrationDate: "2024-03-25",
+  },
+  {
+    id: "20",
+    name: "Роман Иванов",
+    phone: "+7 916 012-34-56",
+    email: "roman.ivanov@gmail.com",
+    totalBookings: 35,
+    totalSpent: 78400,
+    status: "vip",
+    lastBooking: "2025-01-02",
+    registrationDate: "2023-06-18",
   },
 ]
 
-const DEMO_BOOKINGS: Booking[] = [
+// Updated demo data with new simplified slot structure
+const DEMO_BOOKING_SLOTS: BookingSlot[] = [
+  // 8:00 AM - 60-minute court booking (2 slots)
   {
-    id: "1",
+    id: "slot-1",
     courtId: "2",
     date: "2025-01-03",
-    timeSlots: ["08:30", "09:00"],
-    duration: 60,
+    time: "08:00",
+    type: "court",
+    paymentStatus: "paid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 60,
+    spanRows: 2,
     clientName: "Анна Петрова",
+    price: 2000,
     clientPhone: "+7 916 123-45-67",
     clientEmail: "anna.petrova@email.ru",
-    totalPrice: 1497,
-    status: "confirmed",
-    paymentMethod: "online",
-    createdBy: "system",
   },
   {
-    id: "2",
+    id: "slot-1-cont",
     courtId: "2",
     date: "2025-01-03",
-    timeSlots: ["09:30", "10:00"],
-    duration: 60,
-    clientName: "Михаил Иванов",
-    clientPhone: "+7 903 987-65-43",
-    clientEmail: "mikhail.ivanov@email.ru",
-    totalPrice: 1497,
-    status: "pending",
-    paymentMethod: "onsite",
-    createdBy: "system",
+    time: "08:30",
+    type: "court",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 60,
+    spanRows: 1,
+    clientName: "Анна Петрова",
+    price: 0,
+    clientPhone: "+7 916 123-45-67",
+    clientEmail: "anna.petrova@email.ru",
   },
-]
 
-const DEMO_TRAINING_SESSIONS: TrainingSession[] = [
+  // 8:00 AM - 90-minute training session (3 slots)
   {
-    id: "1",
-    coachId: "1",
-    courtId: "1",
-    date: "2025-01-03",
-    startTime: "10:00",
-    endTime: "11:30",
-    duration: 90,
-    totalPrice: 0,
-    status: "booked",
-    clientInfo: {
-      name: "Александр Смирнов",
-      phone: "+7 916 555-12-34",
-      email: "alex.smirnov@email.ru",
-    },
-    createdAt: new Date("2024-12-25"),
-  },
-  {
-    id: "2",
-    coachId: "2",
+    id: "slot-2",
     courtId: "3",
     date: "2025-01-03",
-    startTime: "16:00",
-    endTime: "17:00",
-    duration: 60,
-    totalPrice: 0,
-    status: "available",
-    createdAt: new Date("2024-12-28"),
+    time: "08:00",
+    type: "training",
+    paymentStatus: "paid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 90,
+    spanRows: 3,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Михаил Волков",
+    price: 3750,
+    clientPhone: "+7 903 987-65-43",
+    clientEmail: "mikhail.volkov@gmail.com",
+  },
+  {
+    id: "slot-2-cont-1",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "08:30",
+    type: "training",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Михаил Волков",
+    price: 0,
+    clientPhone: "+7 903 987-65-43",
+    clientEmail: "mikhail.volkov@gmail.com",
+  },
+  {
+    id: "slot-2-cont-2",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "09:00",
+    type: "training",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Михаил Волков",
+    price: 0,
+    clientPhone: "+7 903 987-65-43",
+    clientEmail: "mikhail.volkov@gmail.com",
+  },
+
+  // 8:30 AM - Unpaid court booking
+  {
+    id: "slot-3",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "08:30",
+    type: "court",
+    paymentStatus: "unpaid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 60,
+    spanRows: 2,
+    clientName: "Елена Смирнова",
+    price: 2000,
+    clientPhone: "+7 925 456-78-90",
+    clientEmail: "elena.smirnova@yandex.ru",
+  },
+  {
+    id: "slot-3-cont",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "09:00",
+    type: "court",
+    paymentStatus: "unpaid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 60,
+    spanRows: 1,
+    clientName: "Елена Смирнова",
+    price: 0,
+    clientPhone: "+7 925 456-78-90",
+    clientEmail: "elena.smirnova@yandex.ru",
+  },
+
+  // 8:30 AM - Trainer available
+  {
+    id: "slot-4",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "08:30",
+    type: "trainer_available",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 60,
+    spanRows: 2,
+    trainerName: "Анна Петрова",
+  },
+  {
+    id: "slot-4-cont",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "09:00",
+    type: "trainer_available",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 60,
+    spanRows: 1,
+    trainerName: "Анна Петрова",
+  },
+
+  // 9:30 AM - Paid court booking
+  {
+    id: "slot-5",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "09:30",
+    type: "court",
+    paymentStatus: "paid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 90,
+    spanRows: 3,
+    clientName: "Мария Иванова",
+    price: 3000,
+    clientPhone: "+7 926 345-67-89",
+    clientEmail: "maria.ivanova@gmail.com",
+  },
+  {
+    id: "slot-5-cont-1",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "10:00",
+    type: "court",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    clientName: "Мария Иванова",
+    price: 0,
+    clientPhone: "+7 926 345-67-89",
+    clientEmail: "maria.ivanova@gmail.com",
+  },
+  {
+    id: "slot-5-cont-2",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "10:30",
+    type: "court",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    clientName: "Мария Иванова",
+    price: 0,
+    clientPhone: "+7 926 345-67-89",
+    clientEmail: "maria.ivanova@gmail.com",
+  },
+
+  // 10:00 AM - Unpaid training session
+  {
+    id: "slot-6",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "10:00",
+    type: "training",
+    paymentStatus: "unpaid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 60,
+    spanRows: 2,
+    trainerName: "Елена Сидорова",
+    clientName: "Сергей Николаев",
+    price: 2700,
+    clientPhone: "+7 915 678-90-12",
+    clientEmail: "sergey.nikolaev@email.ru",
+  },
+  {
+    id: "slot-6-cont",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "10:30",
+    type: "training",
+    paymentStatus: "unpaid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 60,
+    spanRows: 1,
+    trainerName: "Елена Сидорова",
+    clientName: "Сергей Николаев",
+    price: 0,
+    clientPhone: "+7 915 678-90-12",
+    clientEmail: "sergey.nikolaev@email.ru",
+  },
+
+  // 10:30 AM - Trainer available
+  {
+    id: "slot-7",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "10:30",
+    type: "trainer_available",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 90,
+    spanRows: 3,
+    trainerName: "Михаил Иванов",
+  },
+  {
+    id: "slot-7-cont-1",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "11:00",
+    type: "trainer_available",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    trainerName: "Михаил Иванов",
+  },
+  {
+    id: "slot-7-cont-2",
+    courtId: "4",
+    date: "2025-01-03",
+    time: "11:30",
+    type: "trainer_available",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    trainerName: "Михаил Иванов",
+  },
+
+  // 11:00 AM - Unpaid court booking
+  {
+    id: "slot-8",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "11:00",
+    type: "court",
+    paymentStatus: "unpaid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 60,
+    spanRows: 2,
+    clientName: "Ольга Морозова",
+    price: 2200,
+    clientPhone: "+7 903 789-01-23",
+    clientEmail: "olga.morozova@yandex.ru",
+  },
+  {
+    id: "slot-8-cont",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "11:30",
+    type: "court",
+    paymentStatus: "unpaid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 60,
+    spanRows: 1,
+    clientName: "Ольга Морозова",
+    price: 0,
+    clientPhone: "+7 903 789-01-23",
+    clientEmail: "olga.morozova@yandex.ru",
+  },
+
+  // 12:00 PM - Paid court booking
+  {
+    id: "slot-9",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "12:00",
+    type: "court",
+    paymentStatus: "paid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 60,
+    spanRows: 2,
+    clientName: "Павел Новиков",
+    price: 2500,
+    clientPhone: "+7 916 890-12-34",
+    clientEmail: "pavel.novikov@gmail.com",
+  },
+  {
+    id: "slot-9-cont",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "12:30",
+    type: "court",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 60,
+    spanRows: 1,
+    clientName: "Павел Новиков",
+    price: 0,
+    clientPhone: "+7 916 890-12-34",
+    clientEmail: "pavel.novikov@gmail.com",
+  },
+
+  // 12:00 PM - Paid training session
+  {
+    id: "slot-10",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "12:00",
+    type: "training",
+    paymentStatus: "paid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 90,
+    spanRows: 3,
+    trainerName: "Анна Петрова",
+    clientName: "Светлана Кузнецова",
+    price: 4125,
+    clientPhone: "+7 925 901-23-45",
+    clientEmail: "svetlana.kuznetsova@email.ru",
+  },
+  {
+    id: "slot-10-cont-1",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "12:30",
+    type: "training",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    trainerName: "Анна Петрова",
+    clientName: "Светлана Кузнецова",
+    price: 0,
+    clientPhone: "+7 925 901-23-45",
+    clientEmail: "svetlana.kuznetsova@email.ru",
+  },
+  {
+    id: "slot-10-cont-2",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "13:00",
+    type: "training",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    trainerName: "Анна Петрова",
+    clientName: "Светлана Кузнецова",
+    price: 0,
+    clientPhone: "+7 925 901-23-45",
+    clientEmail: "svetlana.kuznetsova@email.ru",
+  },
+
+  // 18:00 PM - Peak hour training (paid)
+  {
+    id: "slot-11",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "18:00",
+    type: "training",
+    paymentStatus: "paid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 90,
+    spanRows: 3,
+    trainerName: "Елена Сидорова",
+    clientName: "Максим Петров",
+    price: 4875,
+    clientPhone: "+7 915 890-12-34",
+    clientEmail: "maxim.petrov@email.ru",
+  },
+  {
+    id: "slot-11-cont-1",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "18:30",
+    type: "training",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    trainerName: "Елена Сидорова",
+    clientName: "Максим Петров",
+    price: 0,
+    clientPhone: "+7 915 890-12-34",
+    clientEmail: "maxim.petrov@email.ru",
+  },
+  {
+    id: "slot-11-cont-2",
+    courtId: "1",
+    date: "2025-01-03",
+    time: "19:00",
+    type: "training",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    trainerName: "Елена Сидорова",
+    clientName: "Максим Петров",
+    price: 0,
+    clientPhone: "+7 915 890-12-34",
+    clientEmail: "maxim.petrov@email.ru",
+  },
+
+  // 18:00 PM - Peak hour court (paid)
+  {
+    id: "slot-12",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "18:00",
+    type: "court",
+    paymentStatus: "paid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 60,
+    spanRows: 2,
+    clientName: "Юлия Сидорова",
+    price: 3500,
+    clientPhone: "+7 903 901-23-45",
+    clientEmail: "yulia.sidorova@yandex.ru",
+  },
+  {
+    id: "slot-12-cont",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "18:30",
+    type: "court",
+    paymentStatus: "paid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 60,
+    spanRows: 1,
+    clientName: "Юлия Сидорова",
+    price: 0,
+    clientPhone: "+7 903 901-23-45",
+    clientEmail: "yulia.sidorova@yandex.ru",
+  },
+
+  // 19:30 PM - Unpaid training session
+  {
+    id: "slot-13",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "19:30",
+    type: "training",
+    paymentStatus: "unpaid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 60,
+    spanRows: 2,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Мария Иванова",
+    price: 4200,
+    clientPhone: "+7 926 345-67-89",
+    clientEmail: "maria.ivanova@gmail.com",
+  },
+  {
+    id: "slot-13-cont",
+    courtId: "3",
+    date: "2025-01-03",
+    time: "20:00",
+    type: "training",
+    paymentStatus: "unpaid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 60,
+    spanRows: 1,
+    trainerName: "Дмитрий Козлов",
+    clientName: "Мария Иванова",
+    price: 0,
+    clientPhone: "+7 926 345-67-89",
+    clientEmail: "maria.ivanova@gmail.com",
+  },
+
+  // 19:00 PM - Unpaid court booking
+  {
+    id: "slot-14",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "19:00",
+    type: "court",
+    paymentStatus: "unpaid",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 60,
+    spanRows: 2,
+    clientName: "Анна Петрова",
+    price: 3600,
+    clientPhone: "+7 916 123-45-67",
+    clientEmail: "anna.petrova@email.ru",
+  },
+  {
+    id: "slot-14-cont",
+    courtId: "2",
+    date: "2025-01-03",
+    time: "19:30",
+    type: "court",
+    paymentStatus: "unpaid",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 60,
+    spanRows: 1,
+    clientName: "Анна Петрова",
+    price: 0,
+    clientPhone: "+7 916 123-45-67",
+    clientEmail: "anna.petrova@email.ru",
+  },
+
+  // 19:30 PM - Trainer available
+  {
+    id: "slot-15",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "19:30",
+    type: "trainer_available",
+    isFirstSlot: true,
+    isContinuation: false,
+    totalDuration: 90,
+    spanRows: 3,
+    trainerName: "Анна Петрова",
+  },
+  {
+    id: "slot-15-cont-1",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "20:00",
+    type: "trainer_available",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    trainerName: "Анна Петрова",
+  },
+  {
+    id: "slot-15-cont-2",
+    courtId: "5",
+    date: "2025-01-03",
+    time: "20:30",
+    type: "trainer_available",
+    isFirstSlot: false,
+    isContinuation: true,
+    totalDuration: 90,
+    spanRows: 1,
+    trainerName: "Анна Петрова",
   },
 ]
 
@@ -279,17 +922,41 @@ for (let hour = 8; hour < 22; hour++) {
   TIME_SLOTS.push(`${hour.toString().padStart(2, "0")}:30`)
 }
 
+// Utility functions
+const getSlotColor = (type: BookingType, paymentStatus?: PaymentStatus) => {
+  switch (type) {
+    case "court":
+      return paymentStatus === "paid"
+        ? "bg-blue-500 text-white hover:bg-blue-600"
+        : "bg-blue-300 text-white hover:bg-blue-400"
+
+    case "training":
+      return paymentStatus === "paid"
+        ? "bg-purple-500 text-white hover:bg-purple-600"
+        : "bg-purple-300 text-white hover:bg-purple-400"
+
+    case "trainer_available":
+      return "bg-green-500 text-white hover:bg-green-600"
+
+    case "free":
+      return "bg-gray-50 hover:bg-blue-50 text-gray-700 border border-gray-200"
+
+    default:
+      return "bg-gray-50"
+  }
+}
+
 export function EnhancedAdminCalendar() {
   const [selectedDate, setSelectedDate] = useState("2025-01-03")
   const [courtTypeFilter, setCourtTypeFilter] = useState<"all" | "hard" | "clay" | "indoor">("all")
-  const [selectedItem, setSelectedItem] = useState<Booking | TrainingSession | null>(null)
+  const [activeFilters, setActiveFilters] = useState<FilterType[]>(["all"])
+  const [selectedSlot, setSelectedSlot] = useState<BookingSlot | null>(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [showTrainingModal, setShowTrainingModal] = useState(false)
   const [showSlotChoiceModal, setShowSlotChoiceModal] = useState(false)
   const [showClientBookingModal, setShowClientBookingModal] = useState(false)
   const [slotClickData, setSlotClickData] = useState<SlotClickChoice | null>(null)
-  const [bookings, setBookings] = useState<Booking[]>(DEMO_BOOKINGS)
-  const [trainingSessions, setTrainingSessions] = useState<TrainingSession[]>(DEMO_TRAINING_SESSIONS)
+  const [bookingSlots, setBookingSlots] = useState<BookingSlot[]>(DEMO_BOOKING_SLOTS)
   const [clients] = useState<Client[]>(DEMO_CLIENTS)
   const [clientSearch, setClientSearch] = useState("")
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
@@ -323,6 +990,30 @@ export function EnhancedAdminCalendar() {
     notes: "",
   })
 
+  // Calculate daily financials
+  const dailyFinancials = useMemo((): DailyFinancials => {
+    const daySlots = bookingSlots.filter((slot) => slot.date === selectedDate && slot.isFirstSlot)
+    const totalSlots = COURTS.length * TIME_SLOTS.length
+    const occupiedSlots = daySlots.filter((slot) => slot.type !== "free").length
+
+    const totalPaid = daySlots
+      .filter((slot) => slot.paymentStatus === "paid")
+      .reduce((sum, slot) => sum + (slot.price || 0), 0)
+
+    const totalUnpaid = daySlots
+      .filter((slot) => slot.paymentStatus === "unpaid")
+      .reduce((sum, slot) => sum + (slot.price || 0), 0)
+
+    const unpaidCount = daySlots.filter((slot) => slot.paymentStatus === "unpaid").length
+
+    return {
+      totalPaid,
+      totalUnpaid,
+      unpaidCount,
+      occupancyRate: Math.round((occupiedSlots / totalSlots) * 100),
+    }
+  }, [bookingSlots, selectedDate])
+
   // Filter courts based on type
   const filteredCourts = useMemo(() => {
     if (courtTypeFilter === "all") return COURTS
@@ -340,26 +1031,55 @@ export function EnhancedAdminCalendar() {
     )
   }, [clients, clientSearch])
 
-  // Get booking for slot
-  const getBookingForSlot = (courtId: string, date: string, time: string): Booking | null => {
-    return bookings.find((b) => b.courtId === courtId && b.date === date && b.timeSlots.includes(time)) || null
-  }
-
-  // Get training session for slot
-  const getTrainingSessionForSlot = (courtId: string, date: string, time: string): TrainingSession | null => {
-    return (
-      trainingSessions.find((s) => {
-        if (s.courtId !== courtId || s.date !== date) return false
-        const sessionStart = s.startTime
-        const sessionEnd = s.endTime
-        return time >= sessionStart && time < sessionEnd
-      }) || null
+  // Get slot data for specific court and time
+  const getSlotData = (courtId: string, date: string, time: string): BookingSlot => {
+    const existingSlot = bookingSlots.find(
+      (slot) => slot.courtId === courtId && slot.date === date && slot.time === time,
     )
+
+    if (existingSlot) {
+      return existingSlot
+    }
+
+    // Return free slot with calculated price
+    const court = COURTS.find((c) => c.id === courtId)
+    const price = court ? calculateSlotPrice(court.basePrice, time) : 0
+
+    return {
+      id: `free-${courtId}-${time}`,
+      courtId,
+      date,
+      time,
+      type: "free",
+      isFirstSlot: true,
+      isContinuation: false,
+      totalDuration: 30,
+      spanRows: 1,
+      price,
+    }
   }
 
-  // Check if time slot is the start of a training session
-  const isTrainingSessionStart = (session: TrainingSession, time: string): boolean => {
-    return session.startTime === time
+  // Filter slots based on active filters
+  const shouldShowSlot = (slot: BookingSlot): boolean => {
+    if (activeFilters.includes("all")) return true
+
+    if (activeFilters.includes("unpaid") && slot.paymentStatus === "unpaid") {
+      return true
+    }
+
+    if (activeFilters.includes("trainings") && (slot.type === "training" || slot.type === "trainer_available")) {
+      return true
+    }
+
+    if (activeFilters.includes("courts") && slot.type === "court") {
+      return true
+    }
+
+    if (activeFilters.includes("available") && (slot.type === "free" || slot.type === "trainer_available")) {
+      return true
+    }
+
+    return false
   }
 
   const calculateSlotPrice = (basePrice: number, time: string): number => {
@@ -375,33 +1095,28 @@ export function EnhancedAdminCalendar() {
     return COACHES.find((c) => c.id === coachId)
   }
 
-  const handleSlotClick = (
-    courtId: string,
-    time: string,
-    booking: Booking | null,
-    trainingSession: TrainingSession | null,
-  ) => {
-    if (booking) {
-      setSelectedItem(booking)
-    } else if (trainingSession) {
-      if (trainingSession.status === "available") {
-        // Open client booking form for unbooked training session
-        setClientBookingForm({
-          sessionId: trainingSession.id,
-          clientId: "",
-          clientName: "",
-          clientPhone: "",
-          clientEmail: "",
-          notes: "",
-        })
-        setShowClientBookingModal(true)
-      } else {
-        setSelectedItem(trainingSession)
-      }
-    } else {
+  const handleSlotClick = (slot: BookingSlot) => {
+    // Don't allow clicking on continuation slots
+    if (slot.isContinuation) return
+
+    if (slot.type === "free") {
       // Empty slot clicked - show choice modal
-      setSlotClickData({ courtId, time, date: selectedDate })
+      setSlotClickData({ courtId: slot.courtId, time: slot.time, date: selectedDate })
       setShowSlotChoiceModal(true)
+    } else if (slot.type === "trainer_available") {
+      // Open client booking form for trainer available slot
+      setClientBookingForm({
+        sessionId: slot.id,
+        clientId: "",
+        clientName: "",
+        clientPhone: "",
+        clientEmail: "",
+        notes: "",
+      })
+      setShowClientBookingModal(true)
+    } else {
+      // Show slot details
+      setSelectedSlot(slot)
     }
   }
 
@@ -444,38 +1159,46 @@ export function EnhancedAdminCalendar() {
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Generate time slots based on duration (30-minute intervals)
-    const startHour = Number.parseInt(newBooking.startTime.split(":")[0])
-    const startMinute = Number.parseInt(newBooking.startTime.split(":")[1])
+    const court = COURTS.find((c) => c.id === newBooking.courtId)
+    const price = court ? calculateSlotPrice(court.basePrice, newBooking.startTime) : 0
+
+    // Generate slots based on duration
     const slotsNeeded = newBooking.duration / 30
-    const timeSlots: string[] = []
+    const newSlots: BookingSlot[] = []
 
     for (let i = 0; i < slotsNeeded; i++) {
-      const slotMinute = startMinute + i * 30
-      const slotHour = startHour + Math.floor(slotMinute / 60)
-      const finalMinute = slotMinute % 60
-      timeSlots.push(`${slotHour.toString().padStart(2, "0")}:${finalMinute.toString().padStart(2, "0")}`)
+      const [hours, minutes] = newBooking.startTime.split(":").map(Number)
+      const slotMinutes = minutes + i * 30
+      const slotHours = hours + Math.floor(slotMinutes / 60)
+      const finalMinutes = slotMinutes % 60
+      const slotTime = `${slotHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`
+
+      newSlots.push({
+        id: i === 0 ? `${Date.now()}` : `${Date.now()}-cont-${i}`,
+        courtId: newBooking.courtId,
+        date: newBooking.date,
+        time: slotTime,
+        type: "court",
+        paymentStatus: "unpaid",
+        isFirstSlot: i === 0,
+        isContinuation: i > 0,
+        totalDuration: newBooking.duration,
+        spanRows: i === 0 ? slotsNeeded : 1,
+        clientName: newBooking.clientName,
+        clientPhone: newBooking.clientPhone,
+        clientEmail: newBooking.clientEmail,
+        price: i === 0 ? price * slotsNeeded : 0,
+        notes: newBooking.notes,
+      })
     }
 
-    const court = COURTS.find((c) => c.id === newBooking.courtId)
-    const totalPrice = timeSlots.reduce((sum, slot) => sum + calculateSlotPrice(court?.basePrice || 0, slot), 0)
+    setBookingSlots([
+      ...bookingSlots.filter(
+        (s) => !newSlots.some((ns) => ns.courtId === s.courtId && ns.date === s.date && ns.time === s.time),
+      ),
+      ...newSlots,
+    ])
 
-    const booking: Booking = {
-      id: Date.now().toString(),
-      courtId: newBooking.courtId,
-      date: newBooking.date,
-      timeSlots,
-      duration: newBooking.duration,
-      clientName: newBooking.clientName,
-      clientPhone: newBooking.clientPhone,
-      clientEmail: newBooking.clientEmail,
-      totalPrice,
-      status: "pending",
-      createdBy: "admin",
-      notes: newBooking.notes || undefined,
-    }
-
-    setBookings([...bookings, booking])
     setShowBookingModal(false)
     setNewBooking({
       courtId: "",
@@ -494,20 +1217,20 @@ export function EnhancedAdminCalendar() {
   const handleClientBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Update training session with client info
-    setTrainingSessions(
-      trainingSessions.map((session) =>
-        session.id === clientBookingForm.sessionId
+    // Update trainer available slot to training session
+    setBookingSlots(
+      bookingSlots.map((slot) =>
+        slot.id === clientBookingForm.sessionId || slot.id.startsWith(clientBookingForm.sessionId + "-cont")
           ? {
-              ...session,
-              status: "booked",
-              clientInfo: {
-                name: clientBookingForm.clientName,
-                phone: clientBookingForm.clientPhone,
-                email: clientBookingForm.clientEmail,
-              },
+              ...slot,
+              type: "training" as BookingType,
+              paymentStatus: "unpaid" as PaymentStatus,
+              clientName: clientBookingForm.clientName,
+              clientPhone: clientBookingForm.clientPhone,
+              clientEmail: clientBookingForm.clientEmail,
+              notes: clientBookingForm.notes,
             }
-          : session,
+          : slot,
       ),
     )
 
@@ -522,65 +1245,31 @@ export function EnhancedAdminCalendar() {
     })
   }
 
-  const generateRecurringSessions = (baseSession: NewTrainingSession): TrainingSession[] => {
-    const sessions: TrainingSession[] = []
-    const startDate = new Date(baseSession.date)
-    const endDate = baseSession.recurringEndDate ? new Date(baseSession.recurringEndDate) : new Date(startDate)
-    endDate.setMonth(endDate.getMonth() + 1) // Default to 1 month if no end date
-
-    const createSession = (date: Date): TrainingSession => {
-      const startTime = baseSession.startTime
-      const [hours, minutes] = startTime.split(":").map(Number)
-      const endMinutes = minutes + baseSession.duration
-      const endHours = hours + Math.floor(endMinutes / 60)
-      const finalMinutes = endMinutes % 60
-      const endTime = `${endHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`
-
-      return {
-        id: `${Date.now()}-${date.getTime()}`,
-        coachId: baseSession.coachId,
-        courtId: baseSession.courtId,
-        date: date.toISOString().split("T")[0],
-        startTime,
-        endTime,
-        duration: baseSession.duration,
-        totalPrice: 0,
-        status: "available",
-        createdAt: new Date(),
-      }
-    }
-
-    if (baseSession.recurring === "none") {
-      sessions.push(createSession(startDate))
-    } else if (baseSession.recurring === "daily") {
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        sessions.push(createSession(new Date(d)))
-      }
-    } else if (baseSession.recurring === "weekly") {
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 7)) {
-        sessions.push(createSession(new Date(d)))
-      }
-    } else if (baseSession.recurring === "custom" && baseSession.recurringDays) {
-      // Convert Monday-first to Sunday-first for Date.getDay()
-      const targetDays = baseSession.recurringDays.map((day) => {
-        const mondayFirst = Number.parseInt(day)
-        return mondayFirst === 6 ? 0 : mondayFirst + 1 // Convert Monday-first to Sunday-first
-      })
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        if (targetDays.includes(d.getDay())) {
-          sessions.push(createSession(new Date(d)))
-        }
-      }
-    }
-
-    return sessions
-  }
-
   const handleTrainingSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const newSessions = generateRecurringSessions(newTrainingSession)
-    setTrainingSessions([...trainingSessions, ...newSessions])
+    const coach = COACHES.find((c) => c.id === newTrainingSession.coachId)
+
+    const newSlot: BookingSlot = {
+      id: Date.now().toString(),
+      courtId: newTrainingSession.courtId,
+      date: newTrainingSession.date,
+      time: newTrainingSession.startTime,
+      type: "trainer_available",
+      isFirstSlot: true,
+      isContinuation: false,
+      totalDuration: newTrainingSession.duration,
+      spanRows: newTrainingSession.duration / 30,
+      trainerName: coach?.name,
+    }
+
+    setBookingSlots([
+      ...bookingSlots.filter(
+        (s) => !(s.courtId === newSlot.courtId && s.date === newSlot.date && s.time === newSlot.time),
+      ),
+      newSlot,
+    ])
+
     setShowTrainingModal(false)
     setNewTrainingSession({
       coachId: "",
@@ -594,12 +1283,92 @@ export function EnhancedAdminCalendar() {
     })
   }
 
-  const isBooking = (item: Booking | TrainingSession): item is Booking => {
-    return "timeSlots" in item
+  const getSlotContent = (slot: BookingSlot) => {
+    // No content for continuation slots
+    if (slot.isContinuation) return null
+
+    // Free slots show price
+    if (slot.type === "free") {
+      return (
+        <div className="p-2 h-full flex flex-col justify-center">
+          <div className="font-semibold text-sm">{slot.price}₽</div>
+          <div className="text-xs mt-1">30 мин</div>
+        </div>
+      )
+    }
+
+    // Trainer available slots
+    if (slot.type === "trainer_available") {
+      return (
+        <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
+          <div className="font-bold text-sm truncate flex items-center gap-1">
+            <User className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{slot.trainerName}</span>
+          </div>
+          <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
+            <Clock className="h-3 w-3 flex-shrink-0" />
+            <span>{slot.totalDuration} мин</span>
+          </div>
+          <div className="text-xs opacity-75 mt-1">Доступно</div>
+        </div>
+      )
+    }
+
+    // Court bookings
+    if (slot.type === "court") {
+      return (
+        <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
+          <div className="font-bold text-sm truncate flex items-center gap-1">
+            {slot.paymentStatus === "paid" ? (
+              <CheckCircle className="h-3 w-3 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="h-3 w-3 flex-shrink-0" />
+            )}
+            <span className="truncate">{slot.clientName}</span>
+          </div>
+          <div className="text-xs opacity-90 mt-1 flex items-center gap-1">
+            <Clock className="h-3 w-3 flex-shrink-0" />
+            <span>{slot.totalDuration} мин</span>
+          </div>
+          {slot.price && slot.price > 0 && <div className="text-xs font-semibold mt-1">{slot.price}₽</div>}
+        </div>
+      )
+    }
+
+    // Training sessions
+    if (slot.type === "training") {
+      return (
+        <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
+          <div className="font-bold text-sm truncate flex items-center gap-1">
+            <User className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{slot.trainerName}</span>
+          </div>
+          {slot.clientName && (
+            <div className="text-xs opacity-75 truncate mt-1 flex items-center gap-1">
+              {slot.paymentStatus === "paid" ? (
+                <CheckCircle className="h-3 w-3 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-3 w-3 flex-shrink-0" />
+              )}
+              <span className="truncate">{slot.clientName}</span>
+            </div>
+          )}
+          <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
+            <Clock className="h-3 w-3 flex-shrink-0" />
+            <span>{slot.totalDuration} мин</span>
+          </div>
+        </div>
+      )
+    }
+
+    return null
   }
 
   return (
     <div className="h-screen flex flex-col bg-white">
+      {/* Financial Summary */}
+      <FinancialSummary financials={dailyFinancials} selectedDate={selectedDate} />
+
       {/* Filters Section */}
       <div className="bg-white border-b border-gray-200 p-4">
         <div className="flex items-center gap-4">
@@ -634,27 +1403,12 @@ export function EnhancedAdminCalendar() {
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="bg-gray-50 border-b border-gray-200 p-2">
-        <div className="flex items-center gap-4 text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-blue-500 rounded"></div>
-            <span>Оплаченные брони</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-orange-500 rounded"></div>
-            <span>Оплата на месте</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-purple-500 rounded"></div>
-            <span>Забронированные тренировки</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-green-500 rounded"></div>
-            <span>Незабронированные тренировки</span>
-          </div>
-        </div>
-      </div>
+      {/* Booking Filters */}
+      <BookingFilters
+        activeFilters={activeFilters}
+        onFilterChange={setActiveFilters}
+        unpaidCount={dailyFinancials.unpaidCount}
+      />
 
       {/* Calendar Grid */}
       <div className="flex-1 overflow-auto">
@@ -695,76 +1449,38 @@ export function EnhancedAdminCalendar() {
 
               {/* Court slots */}
               {filteredCourts.map((court) => {
-                const booking = getBookingForSlot(court.id, selectedDate, time)
-                const trainingSession = getTrainingSessionForSlot(court.id, selectedDate, time)
-                const isFirstSlot = booking && booking.timeSlots[0] === time
-                const isTrainingStart = trainingSession && isTrainingSessionStart(trainingSession, time)
-                const slotPrice = calculateSlotPrice(court.basePrice, time)
+                const slot = getSlotData(court.id, selectedDate, time)
+                const shouldShow = shouldShowSlot(slot)
 
-                let slotContent = null
-                let slotClass =
-                  "relative text-xs border-r border-b border-gray-300 transition-all hover:shadow-md cursor-pointer "
-
-                if (trainingSession) {
-                  const coach = getCoachInfo(trainingSession.coachId)
-                  if (isTrainingStart) {
-                    slotClass +=
-                      trainingSession.status === "booked"
-                        ? "bg-purple-500 text-white hover:bg-purple-600"
-                        : "bg-green-500 text-white hover:bg-green-600"
-
-                    slotContent = (
-                      <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-                        <div className="font-bold text-sm truncate flex items-center gap-1">
-                          <User className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{coach?.name}</span>
-                        </div>
-                        <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
-                          <Clock className="h-3 w-3 flex-shrink-0" />
-                          <span>{trainingSession.duration} мин</span>
-                        </div>
-                        {trainingSession.clientInfo && (
-                          <div className="text-xs opacity-75 truncate mt-1">{trainingSession.clientInfo.name}</div>
-                        )}
-                      </div>
-                    )
-                  } else {
-                    slotClass += "bg-gray-400 opacity-50 cursor-not-allowed"
-                    slotContent = <div className="h-full"></div>
-                  }
-                } else if (booking && isFirstSlot) {
-                  slotClass +=
-                    booking.status === "confirmed"
-                      ? "bg-blue-500 text-white hover:bg-blue-600"
-                      : "bg-orange-500 text-white hover:bg-orange-600"
-
-                  slotContent = (
-                    <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-                      <div className="font-bold text-sm truncate">{booking.clientName}</div>
-                      <div className="text-xs opacity-90 mt-1">{booking.duration} мин</div>
-                      <div className="text-xs font-semibold mt-1">{booking.totalPrice}₽</div>
-                    </div>
-                  )
-                } else if (booking) {
-                  slotClass += "bg-gray-400 opacity-50 cursor-not-allowed"
-                  slotContent = <div className="h-full"></div>
-                } else {
-                  slotClass += "bg-gray-50 hover:bg-blue-50"
-                  slotContent = (
-                    <div className="p-2 h-full flex flex-col justify-center text-gray-600">
-                      <div className="font-semibold text-sm">{slotPrice}₽</div>
-                      <div className="text-xs mt-1">30 мин</div>
-                    </div>
+                if (!shouldShow && !activeFilters.includes("all")) {
+                  return (
+                    <div
+                      key={`${court.id}-${time}`}
+                      className="bg-gray-100 opacity-30 border-r border-b border-gray-300"
+                    />
                   )
                 }
+
+                // For continuation slots, render minimal/invisible content
+                if (slot.isContinuation) {
+                  return (
+                    <div
+                      key={`${court.id}-${time}`}
+                      className={`border-r border-b border-gray-300 ${getSlotColor(slot.type, slot.paymentStatus)}`}
+                    />
+                  )
+                }
+
+                const slotClass = `relative text-xs border-r border-b border-gray-300 transition-all hover:shadow-md cursor-pointer ${getSlotColor(slot.type, slot.paymentStatus)}`
 
                 return (
                   <button
                     key={`${court.id}-${time}`}
-                    onClick={() => handleSlotClick(court.id, time, booking, trainingSession)}
+                    onClick={() => handleSlotClick(slot)}
                     className={slotClass}
+                    style={slot.spanRows > 1 ? { gridRow: `span ${slot.spanRows}` } : {}}
                   >
-                    {slotContent}
+                    {getSlotContent(slot)}
                   </button>
                 )
               })}
@@ -772,6 +1488,9 @@ export function EnhancedAdminCalendar() {
           ))}
         </div>
       </div>
+
+      {/* Slot Legend */}
+      <SlotLegend />
 
       {/* Slot Choice Modal */}
       {showSlotChoiceModal && (
@@ -811,7 +1530,7 @@ export function EnhancedAdminCalendar() {
         </Dialog>
       )}
 
-      {/* Client Booking Modal for Unbooked Training Sessions */}
+      {/* Client Booking Modal for Trainer Available Slots */}
       {showClientBookingModal && (
         <Dialog open={showClientBookingModal} onOpenChange={setShowClientBookingModal}>
           <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto">
@@ -1119,70 +1838,10 @@ export function EnhancedAdminCalendar() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Повторение</label>
-                <select
-                  value={newTrainingSession.recurring}
-                  onChange={(e) =>
-                    setNewTrainingSession({
-                      ...newTrainingSession,
-                      recurring: e.target.value as NewTrainingSession["recurring"],
-                    })
-                  }
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="none">Разовая тренировка</option>
-                  <option value="daily">Каждый день</option>
-                  <option value="weekly">Каждую неделю</option>
-                  <option value="custom">В определенные дни недели</option>
-                </select>
-              </div>
-
-              {newTrainingSession.recurring === "custom" && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Дни недели</label>
-                  <div className="grid grid-cols-7 gap-2">
-                    {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((day, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => {
-                          const days = newTrainingSession.recurringDays || []
-                          const dayStr = index.toString()
-                          setNewTrainingSession({
-                            ...newTrainingSession,
-                            recurringDays: days.includes(dayStr) ? days.filter((d) => d !== dayStr) : [...days, dayStr],
-                          })
-                        }}
-                        className={`p-2 text-sm rounded border ${
-                          (newTrainingSession.recurringDays || []).includes(index.toString())
-                            ? "bg-purple-100 border-purple-300 text-purple-800"
-                            : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
-                        }`}
-                      >
-                        {day}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {newTrainingSession.recurring !== "none" && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Окончание повторений</label>
-                  <input
-                    type="date"
-                    value={newTrainingSession.recurringEndDate}
-                    onChange={(e) => setNewTrainingSession({ ...newTrainingSession, recurringEndDate: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              )}
-
               <div className="bg-purple-50 p-4 rounded-md">
                 <p className="text-sm text-purple-800">
-                  <strong>Примечание:</strong> Это создаст временные слоты для тренера. Клиенты смогут забронировать эти
-                  слоты отдельно.
+                  <strong>Примечание:</strong> Это создаст зарезервированный слот для тренера. Клиенты смогут
+                  забронировать этот слот отдельно.
                 </p>
               </div>
 
@@ -1204,94 +1863,93 @@ export function EnhancedAdminCalendar() {
         </Dialog>
       )}
 
-      {/* Details Modal */}
-      {selectedItem && (
-        <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
+      {/* Slot Details Modal */}
+      {selectedSlot && (
+        <Dialog open={!!selectedSlot} onOpenChange={() => setSelectedSlot(null)}>
           <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{isBooking(selectedItem) ? "Детали бронирования" : "Детали тренировки"}</DialogTitle>
+              <DialogTitle>
+                {selectedSlot.type === "court"
+                  ? "Детали бронирования"
+                  : selectedSlot.type === "training"
+                    ? "Детали тренировки"
+                    : selectedSlot.type === "trainer_available"
+                      ? "Доступный тренер"
+                      : "Детали слота"}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              {isBooking(selectedItem) ? (
+              <div>
+                <strong>Корт:</strong> {COURTS.find((c) => c.id === selectedSlot.courtId)?.name}
+              </div>
+              <div>
+                <strong>Время:</strong> {selectedSlot.time}
+              </div>
+              <div>
+                <strong>Длительность:</strong> {selectedSlot.totalDuration} минут
+              </div>
+
+              {selectedSlot.clientName && (
                 <>
                   <div>
-                    <strong>Клиент:</strong> {selectedItem.clientName}
+                    <strong>Клиент:</strong> {selectedSlot.clientName}
                   </div>
                   <div>
-                    <strong>Телефон:</strong> {selectedItem.clientPhone}
+                    <strong>Телефон:</strong> {selectedSlot.clientPhone}
                   </div>
-                  {selectedItem.clientEmail && (
+                  {selectedSlot.clientEmail && (
                     <div>
-                      <strong>Email:</strong> {selectedItem.clientEmail}
+                      <strong>Email:</strong> {selectedSlot.clientEmail}
                     </div>
-                  )}
-                  <div>
-                    <strong>Корт:</strong> {COURTS.find((c) => c.id === selectedItem.courtId)?.name}
-                  </div>
-                  <div>
-                    <strong>Время:</strong> {selectedItem.timeSlots[0]} -{" "}
-                    {selectedItem.timeSlots[selectedItem.timeSlots.length - 1]}
-                  </div>
-                  <div>
-                    <strong>Сумма:</strong> {selectedItem.totalPrice}₽
-                  </div>
-                  <div>
-                    <strong>Статус:</strong>
-                    <Badge
-                      className={`ml-2 ${selectedItem.status === "confirmed" ? "bg-blue-100 text-blue-800" : "bg-orange-100 text-orange-800"}`}
-                    >
-                      {selectedItem.status === "confirmed" ? "Оплачено" : "Оплата на месте"}
-                    </Badge>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <strong>Тренер:</strong> {getCoachInfo(selectedItem.coachId)?.name}
-                  </div>
-                  <div>
-                    <strong>Корт:</strong> {COURTS.find((c) => c.id === selectedItem.courtId)?.name}
-                  </div>
-                  <div>
-                    <strong>Время:</strong> {selectedItem.startTime} - {selectedItem.endTime}
-                  </div>
-                  <div>
-                    <strong>Длительность:</strong> {selectedItem.duration} минут
-                  </div>
-                  <div>
-                    <strong>Статус:</strong>
-                    <Badge
-                      className={`ml-2 ${selectedItem.status === "booked" ? "bg-purple-100 text-purple-800" : "bg-green-100 text-green-800"}`}
-                    >
-                      {selectedItem.status === "booked" ? "Забронированная тренировка" : "Незабронированная тренировка"}
-                    </Badge>
-                  </div>
-                  {selectedItem.clientInfo && (
-                    <>
-                      <div>
-                        <strong>Клиент:</strong> {selectedItem.clientInfo.name}
-                      </div>
-                      <div>
-                        <strong>Телефон:</strong> {selectedItem.clientInfo.phone}
-                      </div>
-                      {selectedItem.clientInfo.email && (
-                        <div>
-                          <strong>Email:</strong> {selectedItem.clientInfo.email}
-                        </div>
-                      )}
-                    </>
                   )}
                 </>
               )}
+
+              {selectedSlot.trainerName && (
+                <div>
+                  <strong>Тренер:</strong> {selectedSlot.trainerName}
+                </div>
+              )}
+
+              {selectedSlot.price && selectedSlot.price > 0 && (
+                <div>
+                  <strong>Сумма:</strong> {selectedSlot.price}₽
+                </div>
+              )}
+
+              {selectedSlot.paymentStatus && (
+                <div>
+                  <strong>Статус оплаты:</strong>
+                  <Badge
+                    className={`ml-2 ${
+                      selectedSlot.paymentStatus === "paid"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-orange-100 text-orange-800"
+                    }`}
+                  >
+                    {selectedSlot.paymentStatus === "paid" ? "Оплачено ✅" : "Не оплачено ⏳"}
+                  </Badge>
+                </div>
+              )}
+
+              {selectedSlot.notes && (
+                <div>
+                  <strong>Заметки:</strong> {selectedSlot.notes}
+                </div>
+              )}
             </div>
             <div className="flex gap-3 pt-4">
-              <Button variant="outline" className="flex-1 bg-transparent">
-                Редактировать
-              </Button>
-              <Button variant="destructive" className="flex-1">
-                Отменить
-              </Button>
-              <Button variant="secondary" onClick={() => setSelectedItem(null)}>
+              {selectedSlot.type !== "free" && (
+                <>
+                  <Button variant="outline" className="flex-1 bg-transparent">
+                    Редактировать
+                  </Button>
+                  <Button variant="destructive" className="flex-1">
+                    Отменить
+                  </Button>
+                </>
+              )}
+              <Button variant="secondary" onClick={() => setSelectedSlot(null)}>
                 Закрыть
               </Button>
             </div>
