@@ -20,25 +20,21 @@ export enum SlotStatus {
   TRAINING_PAID = "training_paid",
   TRAINING_UNPAID = "training_unpaid",
   TRAINER_RESERVED = "trainer_reserved",
+  BLOCKED = "blocked",
 }
-
-export type BookingType = "court" | "training" | "trainer_available" | "free"
-export type PaymentStatus = "paid" | "unpaid"
 
 export interface BookingSlot {
   id: string
   courtId: string
   date: string
   time: string
-  type: BookingType
-  paymentStatus?: PaymentStatus
-  isFirstSlot: boolean
-  isContinuation: boolean
-  totalDuration: number // 30, 60, 90, 120 minutes
-  spanRows: number // 1, 2, 3, 4 slots
+  status: SlotStatus
   price?: number
   clientName?: string
   trainerName?: string
+  paymentStatus?: "paid" | "unpaid"
+  blockReason?: string
+  duration?: number
   clientPhone?: string
   clientEmail?: string
   notes?: string

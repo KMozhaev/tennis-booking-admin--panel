@@ -1,7 +1,6 @@
 "use client"
-
-import { TrendingUp, TrendingDown, DollarSign, AlertTriangle } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { TrendingUp, AlertTriangle, CheckCircle, Clock } from "lucide-react"
 import type { DailyFinancials } from "../types/coach-types"
 
 interface FinancialSummaryProps {
@@ -15,60 +14,79 @@ export function FinancialSummary({ financials, selectedDate }: FinancialSummaryP
       style: "currency",
       currency: "RUB",
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount)
   }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return new Intl.DateTimeFormat("ru-RU", {
+    const today = new Date()
+    const isToday = date.toDateString() === today.toDateString()
+
+    if (isToday) {
+      return "Сегодня"
+    }
+
+    return date.toLocaleDateString("ru-RU", {
       day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(date)
+      month: "short",
+    })
   }
 
   return (
-    <Card className="border-b border-gray-200 rounded-none bg-gradient-to-r from-blue-50 to-purple-50">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              <span className="text-sm font-medium text-gray-700">{formatDate(selectedDate)}:</span>
+    <div className="bg-white border-b border-gray-200 p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-600">💰 {formatDate(selectedDate)}:</span>
+            <div className="flex items-center gap-1">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <span className="font-semibold text-green-700">{formatCurrency(financials.totalPaid)}</span>
             </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-green-600" />
-                <span className="text-lg font-bold text-green-700">{formatCurrency(financials.totalPaid)}</span>
-                <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">✅ Оплачено</span>
-              </div>
-
-              <div className="text-gray-400">+</div>
-
-              <div className="flex items-center gap-2">
-                <TrendingDown className="h-4 w-4 text-orange-500" />
-                <span className="text-lg font-bold text-orange-600">{formatCurrency(financials.totalUnpaid)}</span>
-                <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full">⏳ Ожидает</span>
-              </div>
+            <span className="text-gray-400">+</span>
+            <div className="flex items-center gap-1">
+              <Clock className="h-4 w-4 text-orange-600" />
+              <span className="font-semibold text-orange-700">{formatCurrency(financials.totalUnpaid)}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            {financials.unpaidCount > 0 && (
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-orange-500" />
-                <span className="text-sm font-medium text-orange-700">⚠️ Неоплачено: {financials.unpaidCount}</span>
-              </div>
-            )}
+          <div className="h-6 w-px bg-gray-300" />
 
-            <div className="flex items-center gap-2">
-              <div className="text-sm font-medium text-gray-700">📈 Загрузка:</div>
-              <div className="text-lg font-bold text-blue-700">{financials.occupancyRate}%</div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <AlertTriangle className="h-4 w-4 text-orange-600" />
+              <span className="text-sm text-gray-600">Неоплачено:</span>
+              <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                {financials.unpaidCount}
+              </Badge>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+              <span className="text-sm text-gray-600">Загрузка:</span>
+              <Badge
+                variant="outline"
+                className={`${
+                  financials.occupancyRate >= 80
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : financials.occupancyRate >= 60
+                      ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                      : "bg-red-50 text-red-700 border-red-200"
+                }`}
+              >
+                {financials.occupancyRate}%
+              </Badge>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        <div className="text-sm text-gray-500">
+          Всего:{" "}
+          <span className="font-semibold text-gray-900">
+            {formatCurrency(financials.totalPaid + financials.totalUnpaid)}
+          </span>
+        </div>
+      </div>
+    </div>
   )
 }

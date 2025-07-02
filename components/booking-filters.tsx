@@ -11,44 +11,6 @@ interface BookingFiltersProps {
   unpaidCount?: number
 }
 
-const filterConfig = [
-  {
-    key: "all" as FilterType,
-    label: "Все",
-    color: "bg-gray-800 text-white",
-    activeColor: "bg-gray-900",
-    hoverColor: "hover:bg-gray-700",
-  },
-  {
-    key: "unpaid" as FilterType,
-    label: "Неоплаченные",
-    color: "bg-blue-300 text-white", // Matches light blue/purple unpaid slots
-    activeColor: "bg-blue-400",
-    hoverColor: "hover:bg-blue-400",
-  },
-  {
-    key: "trainings" as FilterType,
-    label: "Тренировки",
-    color: "bg-purple-500 text-white", // Matches purple training slots
-    activeColor: "bg-purple-600",
-    hoverColor: "hover:bg-purple-600",
-  },
-  {
-    key: "courts" as FilterType,
-    label: "Корты",
-    color: "bg-blue-500 text-white", // Matches dark blue paid courts
-    activeColor: "bg-blue-600",
-    hoverColor: "hover:bg-blue-600",
-  },
-  {
-    key: "available" as FilterType,
-    label: "Свободные",
-    color: "bg-green-500 text-white", // Matches green available slots
-    activeColor: "bg-green-600",
-    hoverColor: "hover:bg-green-600",
-  },
-]
-
 export function BookingFilters({ activeFilters, onFilterChange, unpaidCount = 0 }: BookingFiltersProps) {
   const toggleFilter = (filter: FilterType) => {
     if (filter === "all") {
@@ -80,24 +42,53 @@ export function BookingFilters({ activeFilters, onFilterChange, unpaidCount = 0 
           <span className="text-sm font-medium text-gray-700">Фильтры:</span>
         </div>
 
-        {filterConfig.map((config) => {
-          const isActive = activeFilters.includes(config.key)
-          const buttonClass = isActive ? `${config.activeColor} text-white` : `${config.color} ${config.hoverColor}`
+        <Button
+          variant={activeFilters.includes("all") ? "default" : "outline"}
+          size="sm"
+          onClick={() => toggleFilter("all")}
+          className="h-7 text-xs"
+        >
+          Все
+        </Button>
 
-          return (
-            <Button
-              key={config.key}
-              size="sm"
-              onClick={() => toggleFilter(config.key)}
-              className={`h-7 text-xs border-0 ${buttonClass}`}
-            >
-              {config.label}
-              {config.key === "unpaid" && unpaidCount > 0 && (
-                <Badge className="ml-1 h-4 px-1 text-xs bg-white text-blue-600">{unpaidCount}</Badge>
-              )}
-            </Button>
-          )
-        })}
+        <Button
+          variant={activeFilters.includes("unpaid") ? "default" : "outline"}
+          size="sm"
+          onClick={() => toggleFilter("unpaid")}
+          className="h-7 text-xs bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+        >
+          Неоплаченные
+          {unpaidCount > 0 && (
+            <Badge className="ml-1 h-4 px-1 text-xs bg-orange-200 text-orange-800">{unpaidCount}</Badge>
+          )}
+        </Button>
+
+        <Button
+          variant={activeFilters.includes("trainings") ? "default" : "outline"}
+          size="sm"
+          onClick={() => toggleFilter("trainings")}
+          className="h-7 text-xs bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+        >
+          Тренировки
+        </Button>
+
+        <Button
+          variant={activeFilters.includes("courts") ? "default" : "outline"}
+          size="sm"
+          onClick={() => toggleFilter("courts")}
+          className="h-7 text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+        >
+          Корты
+        </Button>
+
+        <Button
+          variant={activeFilters.includes("available") ? "default" : "outline"}
+          size="sm"
+          onClick={() => toggleFilter("available")}
+          className="h-7 text-xs bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+        >
+          Свободные
+        </Button>
 
         {hasActiveFilters && (
           <Button
