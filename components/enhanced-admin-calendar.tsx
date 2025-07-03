@@ -8,25 +8,9 @@ import { Input } from "@/components/ui/input"
 import { Clock, Plus, Search } from "lucide-react"
 import { FinancialSummary } from "./financial-summary"
 import { BookingFilters, type FilterType } from "./booking-filters"
-import type { BookingSlot, SlotStatus, DailyFinancials, MergedSlot } from "../types/coach-types"
+import type { BookingSlot, SlotStatus, DailyFinancials, MergedSlot, Coach, Client } from "../types/coach-types"
 
-// Existing interfaces remain the same
-interface Booking {
-  id: string
-  courtId: string
-  date: string
-  timeSlots: string[]
-  duration: number
-  clientName: string
-  clientPhone: string
-  clientEmail?: string
-  totalPrice: number
-  status: "confirmed" | "pending"
-  paymentMethod?: "online" | "onsite"
-  createdBy: "system" | "admin"
-  notes?: string
-}
-
+// Core interfaces
 interface Court {
   id: string
   name: string
@@ -34,19 +18,7 @@ interface Court {
   basePrice: number
 }
 
-interface Client {
-  id: string
-  name: string
-  phone: string
-  email?: string
-  totalBookings: number
-  totalSpent: number
-  status: "active" | "vip" | "inactive"
-  lastBooking: string
-  registrationDate: string
-}
-
-interface NewBooking {
+interface UnifiedBooking {
   courtId: string
   startTime: string
   date: string
@@ -56,24 +28,8 @@ interface NewBooking {
   clientEmail?: string
   duration: number
   notes: string
-  bookingType: "court" | "training_with_coach"
-}
-
-interface NewTrainingSession {
-  coachId: string
-  courtId: string
-  date: string
-  startTime: string
-  duration: number
-  recurring: "none" | "daily" | "weekly" | "custom"
-  recurringDays?: string[]
-  recurringEndDate?: string
-}
-
-interface SlotClickChoice {
-  courtId: string
-  time: string
-  date: string
+  bookingType: "court" | "training"
+  coachId?: string
 }
 
 interface ClientBookingForm {
@@ -85,7 +41,7 @@ interface ClientBookingForm {
   notes: string
 }
 
-// Demo data with updated realistic information - Updated to July 2025
+// Demo data - Updated to July 2025
 const COURTS: Court[] = [
   { id: "1", name: "Корт 1 (Хард)", type: "hard", basePrice: 600 },
   { id: "2", name: "Корт 2 (Хард)", type: "hard", basePrice: 480 },
@@ -94,7 +50,13 @@ const COURTS: Court[] = [
   { id: "5", name: "Корт 5 (Крытый)", type: "indoor", basePrice: 480 },
 ]
 
-// Enhanced demo clients with realistic recent data
+const COACHES: Coach[] = [
+  { id: "1", name: "Анна Петрова", hourlyRate: 2500, color: "#8B5CF6" },
+  { id: "2", name: "Дмитрий Козлов", hourlyRate: 3000, color: "#10B981" },
+  { id: "3", name: "Елена Сидорова", hourlyRate: 2200, color: "#F59E0B" },
+  { id: "4", name: "Михаил Иванов", hourlyRate: 2800, color: "#EF4444" },
+]
+
 const DEMO_CLIENTS: Client[] = [
   {
     id: "1",
@@ -644,13 +606,6 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   },
 ]
 
-const COACHES = [
-  { id: "1", name: "Анна Петрова", hourlyRate: 2500, color: "#8B5CF6" },
-  { id: "2", name: "Дмитрий Козлов", hourlyRate: 3000, color: "#10B981" },
-  { id: "3", name: "Елена Сидорова", hourlyRate: 2200, color: "#F59E0B" },
-  { id: "4", name: "Михаил Иванов", hourlyRate: 2800, color: "#EF4444" },
-]
-
 // Generate time slots with 30-minute intervals only
 const TIME_SLOTS: string[] = []
 for (let hour = 8; hour < 22; hour++) {
@@ -670,7 +625,7 @@ const getSlotColors = (status: SlotStatus) => {
     case "training_paid":
       return "bg-purple-500 text-white hover:bg-purple-600"
     case "training_unpaid":
-      return "bg-purple-400 text-white hover:bg-purple-500"
+      return "bg-purple-300 text-white hover:bg-purple-400"
     case "trainer_reserved":
       return "bg-green-500 text-white hover:bg-green-600"
     case "blocked":
@@ -792,65 +747,17 @@ const mergeCourtBookingSlots = (slots: BookingSlot[], courtId: string, date: str
   return mergedSlots
 }
 
-// Isolated slot prevention algorithm
-const validateSlotBooking = (
-  slots: BookingSlot[],
-  courtId: string,
-  date: string,
-  startTime: string,
-  duration: number,
-): {
-  isValid: boolean
-  suggestion?: string
-  reason?: string
-} => {
-  const slotsNeeded = duration / 30
-  const courtSlots = slots.filter((s) => s.courtId === courtId && s.date === date && s.status !== "free")
-
-  // Check for isolated slots that would be created
-  for (let i = 0; i < slotsNeeded; i++) {
-    const [hours, minutes] = startTime.split(":").map(Number)
-    const slotMinutes = minutes + i * 30
-    const slotHours = hours + Math.floor(slotMinutes / 60)
-    const finalMinutes = slotMinutes % 60
-    const currentSlotTime = `${slotHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`
-
-    // Check previous slot
-    const prevMinutes = finalMinutes - 30
-    const prevHours = slotHours + Math.floor(prevMinutes / 60)
-    const prevFinalMinutes = prevMinutes < 0 ? 60 + prevMinutes : prevMinutes
-    const prevTime = `${(prevHours < 0 ? 23 : prevHours).toString().padStart(2, "0")}:${prevFinalMinutes.toString().padStart(2, "0")}`
-
-    // Check next slot after booking end
-    const nextMinutes = finalMinutes + 30
-    const nextHours = slotHours + Math.floor(nextMinutes / 60)
-    const nextFinalMinutes = nextMinutes % 60
-    const nextTime = `${nextHours.toString().padStart(2, "0")}:${nextFinalMinutes.toString().padStart(2, "0")}`
-
-    const prevSlot = courtSlots.find((s) => s.time === prevTime)
-    const nextSlot = courtSlots.find((s) => s.time === nextTime)
-
-    // Check if we would create a 30-minute gap
-    if (prevSlot && nextSlot) {
-      const timeBetweenPrevAndNext = getTimeDifference(prevTime, nextTime)
-      if (timeBetweenPrevAndNext === 60) {
-        // Would create isolated 30-minute slot
-        return {
-          isValid: false,
-          suggestion: `Рекомендуем забронировать на ${duration + 30} минут или выбрать другое время`,
-          reason: "Бронирование создаст изолированный 30-минутный слот",
-        }
-      }
-    }
-  }
-
-  return { isValid: true }
+// Phone number validation
+const validatePhoneNumber = (phone: string): boolean => {
+  const phoneRegex = /^\+7\s\d{3}\s\d{3}-\d{2}-\d{2}$/
+  return phoneRegex.test(phone)
 }
 
-const getTimeDifference = (time1: string, time2: string): number => {
-  const [h1, m1] = time1.split(":").map(Number)
-  const [h2, m2] = time2.split(":").map(Number)
-  return h2 * 60 + m2 - (h1 * 60 + m1)
+// Email validation
+const validateEmail = (email: string): boolean => {
+  if (!email) return true // Optional field
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
 }
 
 export function EnhancedAdminCalendar() {
@@ -858,16 +765,13 @@ export function EnhancedAdminCalendar() {
   const [courtTypeFilter, setCourtTypeFilter] = useState<"all" | "hard" | "clay" | "indoor">("all")
   const [activeFilters, setActiveFilters] = useState<FilterType[]>(["all"])
   const [selectedSlot, setSelectedSlot] = useState<BookingSlot | null>(null)
-  const [showBookingModal, setShowBookingModal] = useState(false)
-  const [showTrainingModal, setShowTrainingModal] = useState(false)
-  const [showSlotChoiceModal, setShowSlotChoiceModal] = useState(false)
+  const [showUnifiedBookingModal, setShowUnifiedBookingModal] = useState(false)
   const [showClientBookingModal, setShowClientBookingModal] = useState(false)
-  const [slotClickData, setSlotClickData] = useState<SlotClickChoice | null>(null)
   const [bookingSlots, setBookingSlots] = useState<BookingSlot[]>(ENHANCED_DEMO_DATA)
   const [clients] = useState<Client[]>(DEMO_CLIENTS)
   const [clientSearch, setClientSearch] = useState("")
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
-  const [newBooking, setNewBooking] = useState<NewBooking>({
+  const [unifiedBooking, setUnifiedBooking] = useState<UnifiedBooking>({
     courtId: "",
     startTime: "",
     date: "",
@@ -878,16 +782,7 @@ export function EnhancedAdminCalendar() {
     duration: 60,
     notes: "",
     bookingType: "court",
-  })
-  const [newTrainingSession, setNewTrainingSession] = useState<NewTrainingSession>({
     coachId: "",
-    courtId: "",
-    date: "",
-    startTime: "",
-    duration: 60,
-    recurring: "none",
-    recurringDays: [],
-    recurringEndDate: "",
   })
   const [clientBookingForm, setClientBookingForm] = useState<ClientBookingForm>({
     sessionId: "",
@@ -897,6 +792,7 @@ export function EnhancedAdminCalendar() {
     clientEmail: "",
     notes: "",
   })
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
   // Calculate daily financials with mathematical accuracy
   const dailyFinancials = useMemo((): DailyFinancials => {
@@ -1038,15 +934,16 @@ export function EnhancedAdminCalendar() {
     return Math.round(basePrice * multiplier)
   }
 
-  const getCoachInfo = (coachId: string) => {
-    return COACHES.find((c) => c.id === coachId)
-  }
-
   const handleSlotClick = (slot: BookingSlot) => {
     if (slot.status === "free") {
-      // Empty slot clicked - show choice modal
-      setSlotClickData({ courtId: slot.courtId, time: slot.time, date: selectedDate })
-      setShowSlotChoiceModal(true)
+      // Empty slot clicked - open unified booking form
+      setUnifiedBooking({
+        ...unifiedBooking,
+        courtId: slot.courtId,
+        startTime: slot.time,
+        date: selectedDate,
+      })
+      setShowUnifiedBookingModal(true)
     } else if (slot.status === "trainer_reserved") {
       // Open client booking form for trainer reserved slot
       setClientBookingForm({
@@ -1064,35 +961,10 @@ export function EnhancedAdminCalendar() {
     }
   }
 
-  const handleSlotChoiceSelection = (choice: "court" | "training") => {
-    if (!slotClickData) return
-
-    setShowSlotChoiceModal(false)
-
-    if (choice === "court") {
-      setNewBooking({
-        ...newBooking,
-        courtId: slotClickData.courtId,
-        startTime: slotClickData.time,
-        date: slotClickData.date,
-        bookingType: "court",
-      })
-      setShowBookingModal(true)
-    } else {
-      setNewTrainingSession({
-        ...newTrainingSession,
-        courtId: slotClickData.courtId,
-        startTime: slotClickData.time,
-        date: slotClickData.date,
-      })
-      setShowTrainingModal(true)
-    }
-  }
-
   const handleClientSelect = (client: Client) => {
     setSelectedClient(client)
-    setNewBooking({
-      ...newBooking,
+    setUnifiedBooking({
+      ...unifiedBooking,
       clientId: client.id,
       clientName: client.name,
       clientPhone: client.phone,
@@ -1101,35 +973,57 @@ export function EnhancedAdminCalendar() {
     setClientSearch("")
   }
 
-  const handleBookingSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {}
 
-    const court = COURTS.find((c) => c.id === newBooking.courtId)
-    const price = court ? calculateSlotPrice(court.basePrice, newBooking.startTime) : 0
-
-    // Validate slot booking to prevent isolated slots
-    const validation = validateSlotBooking(
-      bookingSlots,
-      newBooking.courtId,
-      newBooking.date,
-      newBooking.startTime,
-      newBooking.duration,
-    )
-
-    if (!validation.isValid) {
-      if (confirm(`${validation.reason}\n\n${validation.suggestion}\n\nВы хотите продолжить с текущими параметрами?`)) {
-        // User chose to proceed despite warning
-      } else {
-        return // Cancel booking
-      }
+    if (!unifiedBooking.clientName || unifiedBooking.clientName.length < 2) {
+      errors.clientName = "Имя клиента должно содержать минимум 2 символа"
     }
 
+    if (!validatePhoneNumber(unifiedBooking.clientPhone)) {
+      errors.clientPhone = "Введите телефон в формате +7 XXX XXX-XX-XX"
+    }
+
+    if (unifiedBooking.clientEmail && !validateEmail(unifiedBooking.clientEmail)) {
+      errors.clientEmail = "Введите корректный email адрес"
+    }
+
+    if (!unifiedBooking.courtId) {
+      errors.courtId = "Выберите корт"
+    }
+
+    if (!unifiedBooking.startTime) {
+      errors.startTime = "Выберите время"
+    }
+
+    if (unifiedBooking.bookingType === "training" && !unifiedBooking.coachId) {
+      errors.coachId = "Выберите тренера"
+    }
+
+    if (unifiedBooking.notes && unifiedBooking.notes.length > 500) {
+      errors.notes = "Заметки не должны превышать 500 символов"
+    }
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleUnifiedBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!validateForm()) {
+      return
+    }
+
+    const court = COURTS.find((c) => c.id === unifiedBooking.courtId)
+    const basePrice = court ? calculateSlotPrice(court.basePrice, unifiedBooking.startTime) : 0
+
     // Generate slots based on duration and booking type
-    const slotsNeeded = newBooking.duration / 30
+    const slotsNeeded = unifiedBooking.duration / 30
     const newSlots: BookingSlot[] = []
 
     for (let i = 0; i < slotsNeeded; i++) {
-      const [hours, minutes] = newBooking.startTime.split(":").map(Number)
+      const [hours, minutes] = unifiedBooking.startTime.split(":").map(Number)
       const slotMinutes = minutes + i * 30
       const slotHours = hours + Math.floor(slotMinutes / 60)
       const finalMinutes = slotMinutes % 60
@@ -1137,28 +1031,31 @@ export function EnhancedAdminCalendar() {
 
       let status: SlotStatus
       let trainerName: string | undefined
+      let price = 0
 
-      if (newBooking.bookingType === "training_with_coach") {
+      if (unifiedBooking.bookingType === "training") {
         status = "training_unpaid" as SlotStatus
-        const coach = COACHES.find((c) => c.id === newBooking.coachId)
+        const coach = COACHES.find((c) => c.id === unifiedBooking.coachId)
         trainerName = coach?.name
+        price = i === 0 ? coach?.hourlyRate || 0 : 0
       } else {
         status = "court_unpaid" as SlotStatus
+        price = i === 0 ? basePrice * slotsNeeded : 0
       }
 
       newSlots.push({
         id: `${Date.now()}-${i}`,
-        courtId: newBooking.courtId,
-        date: newBooking.date,
+        courtId: unifiedBooking.courtId,
+        date: unifiedBooking.date,
         time: slotTime,
         status,
-        clientName: newBooking.clientName,
-        clientPhone: newBooking.clientPhone,
-        clientEmail: newBooking.clientEmail,
+        clientName: unifiedBooking.clientName,
+        clientPhone: unifiedBooking.clientPhone,
+        clientEmail: unifiedBooking.clientEmail,
         trainerName,
-        price: i === 0 ? price * slotsNeeded : 0, // Only first slot has price
-        duration: newBooking.duration,
-        notes: newBooking.notes,
+        price,
+        duration: unifiedBooking.duration,
+        notes: unifiedBooking.notes,
       })
     }
 
@@ -1169,8 +1066,8 @@ export function EnhancedAdminCalendar() {
       ...newSlots,
     ])
 
-    setShowBookingModal(false)
-    setNewBooking({
+    setShowUnifiedBookingModal(false)
+    setUnifiedBooking({
       courtId: "",
       startTime: "",
       date: selectedDate,
@@ -1181,8 +1078,10 @@ export function EnhancedAdminCalendar() {
       duration: 60,
       notes: "",
       bookingType: "court",
+      coachId: "",
     })
     setSelectedClient(null)
+    setFormErrors({})
   }
 
   const handleClientBookingSubmit = (e: React.FormEvent) => {
@@ -1212,54 +1111,6 @@ export function EnhancedAdminCalendar() {
       clientPhone: "",
       clientEmail: "",
       notes: "",
-    })
-  }
-
-  const handleTrainingSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const coach = COACHES.find((c) => c.id === newTrainingSession.coachId)
-
-    // Enforce minimum 60 minutes (2 slots) for training sessions
-    const slotsNeeded = Math.max(2, newTrainingSession.duration / 30)
-    const actualDuration = slotsNeeded * 30
-    const newSlots: BookingSlot[] = []
-
-    for (let i = 0; i < slotsNeeded; i++) {
-      const [hours, minutes] = newTrainingSession.startTime.split(":").map(Number)
-      const slotMinutes = minutes + i * 30
-      const slotHours = hours + Math.floor(slotMinutes / 60)
-      const finalMinutes = slotMinutes % 60
-      const slotTime = `${slotHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`
-
-      newSlots.push({
-        id: `${Date.now()}-${i}`,
-        courtId: newTrainingSession.courtId,
-        date: newTrainingSession.date,
-        time: slotTime,
-        status: "trainer_reserved" as SlotStatus,
-        trainerName: coach?.name,
-        duration: actualDuration,
-      })
-    }
-
-    setBookingSlots([
-      ...bookingSlots.filter(
-        (s) => !newSlots.some((ns) => ns.courtId === s.courtId && ns.date === s.date && ns.time === s.time),
-      ),
-      ...newSlots,
-    ])
-
-    setShowTrainingModal(false)
-    setNewTrainingSession({
-      coachId: "",
-      courtId: "",
-      date: selectedDate,
-      startTime: "",
-      duration: 60,
-      recurring: "none",
-      recurringDays: [],
-      recurringEndDate: "",
     })
   }
 
@@ -1400,13 +1251,9 @@ export function EnhancedAdminCalendar() {
           </div>
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowBookingModal(true)}>
+            <Button onClick={() => setShowUnifiedBookingModal(true)} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4 mr-2" />
               Бронирование
-            </Button>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={() => setShowTrainingModal(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Тренировка
             </Button>
           </div>
         </div>
@@ -1496,171 +1343,71 @@ export function EnhancedAdminCalendar() {
         </div>
       </div>
 
-      {/* All existing modals with updated terminology */}
-      {/* Slot Choice Modal */}
-      {showSlotChoiceModal && (
-        <Dialog open={showSlotChoiceModal} onOpenChange={setShowSlotChoiceModal}>
-          <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Как хотите забронировать?</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-gray-600">
-                Выберите тип бронирования для{" "}
-                {slotClickData && COURTS.find((c) => c.id === slotClickData.courtId)?.name} на {slotClickData?.time}
-              </p>
-              <div className="grid grid-cols-1 gap-3">
-                <Button
-                  variant="outline"
-                  className="h-16 text-left justify-start bg-transparent"
-                  onClick={() => handleSlotChoiceSelection("court")}
-                >
-                  <div>
-                    <div className="font-semibold">Бронирование корта</div>
-                    <div className="text-sm text-gray-500">Обычное бронирование корта</div>
-                  </div>
-                </Button>
-                <Button
-                  className="h-16 text-left justify-start bg-green-600 hover:bg-green-700"
-                  onClick={() => handleSlotChoiceSelection("training")}
-                >
-                  <div>
-                    <div className="font-semibold">Тренировка с тренером</div>
-                    <div className="text-sm opacity-90">Создать тренировочную сессию</div>
-                  </div>
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Client Booking Modal for Trainer Reserved Slots */}
-      {showClientBookingModal && (
-        <Dialog open={showClientBookingModal} onOpenChange={setShowClientBookingModal}>
-          <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Забронировать тренировку</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleClientBookingSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Имя клиента *</label>
-                <input
-                  type="text"
-                  required
-                  value={clientBookingForm.clientName}
-                  onChange={(e) => setClientBookingForm({ ...clientBookingForm, clientName: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Иван Петров"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Телефон *</label>
-                <input
-                  type="tel"
-                  required
-                  value={clientBookingForm.clientPhone}
-                  onChange={(e) => setClientBookingForm({ ...clientBookingForm, clientPhone: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="+7 XXX XXX-XX-XX"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Email (необязательно)</label>
-                <input
-                  type="email"
-                  value={clientBookingForm.clientEmail}
-                  onChange={(e) => setClientBookingForm({ ...clientBookingForm, clientEmail: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="ivan.petrov@email.ru"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Заметки</label>
-                <textarea
-                  rows={3}
-                  value={clientBookingForm.notes}
-                  onChange={(e) => setClientBookingForm({ ...clientBookingForm, notes: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Дополнительная информация..."
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1 bg-transparent"
-                  onClick={() => setShowClientBookingModal(false)}
-                >
-                  Отмена
-                </Button>
-                <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  Забронировать
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Enhanced Booking Creation Modal with Training Option */}
-      {showBookingModal && (
-        <Dialog open={showBookingModal} onOpenChange={setShowBookingModal}>
+      {/* Unified Booking Modal */}
+      {showUnifiedBookingModal && (
+        <Dialog open={showUnifiedBookingModal} onOpenChange={setShowUnifiedBookingModal}>
           <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Создать бронирование</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleBookingSubmit} className="space-y-4">
+            <form onSubmit={handleUnifiedBookingSubmit} className="space-y-6">
               {/* Booking Type Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2">Тип бронирования</label>
+                <label className="block text-sm font-medium mb-3 text-gray-700">Тип бронирования</label>
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     type="button"
-                    variant={newBooking.bookingType === "court" ? "default" : "outline"}
-                    onClick={() => setNewBooking({ ...newBooking, bookingType: "court" })}
-                    className="h-12"
+                    variant={unifiedBooking.bookingType === "court" ? "default" : "outline"}
+                    onClick={() => setUnifiedBooking({ ...unifiedBooking, bookingType: "court" })}
+                    className="h-16 text-left justify-start bg-white border-2 hover:bg-gray-50"
                   >
-                    Бронирование корта
+                    <div>
+                      <div className="font-semibold text-gray-900">Бронирование корта</div>
+                      <div className="text-sm text-gray-500">Обычное бронирование корта</div>
+                    </div>
                   </Button>
                   <Button
                     type="button"
-                    variant={newBooking.bookingType === "training_with_coach" ? "default" : "outline"}
-                    onClick={() => setNewBooking({ ...newBooking, bookingType: "training_with_coach" })}
-                    className="h-12 bg-green-600 hover:bg-green-700"
+                    variant={unifiedBooking.bookingType === "training" ? "default" : "outline"}
+                    onClick={() => setUnifiedBooking({ ...unifiedBooking, bookingType: "training" })}
+                    className="h-16 text-left justify-start bg-green-600 hover:bg-green-700 text-white"
                   >
-                    Тренировка с тренером
+                    <div>
+                      <div className="font-semibold">Тренировка с тренером</div>
+                      <div className="text-sm opacity-90">Создать тренировочную сессию</div>
+                    </div>
                   </Button>
                 </div>
               </div>
 
               {/* Coach Selection for training bookings */}
-              {newBooking.bookingType === "training_with_coach" && (
+              {unifiedBooking.bookingType === "training" && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">Тренер *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    Тренер <span className="text-red-500">*</span>
+                  </label>
                   <select
                     required
-                    value={newBooking.coachId}
-                    onChange={(e) => setNewBooking({ ...newBooking, coachId: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={unifiedBooking.coachId}
+                    onChange={(e) => setUnifiedBooking({ ...unifiedBooking, coachId: e.target.value })}
+                    className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      formErrors.coachId ? "border-red-500" : "border-gray-300"
+                    }`}
                   >
                     <option value="">Выберите тренера</option>
                     {COACHES.map((coach) => (
                       <option key={coach.id} value={coach.id}>
-                        {coach.name}
+                        {coach.name} - {coach.hourlyRate}₽/час
                       </option>
                     ))}
                   </select>
+                  {formErrors.coachId && <p className="text-red-500 text-xs mt-1">{formErrors.coachId}</p>}
                 </div>
               )}
 
               {/* Client Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2">Клиент</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Клиент</label>
                 <div className="relative">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -1691,103 +1438,150 @@ export function EnhancedAdminCalendar() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Имя клиента *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    Имя клиента <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     required
-                    value={newBooking.clientName}
-                    onChange={(e) => setNewBooking({ ...newBooking, clientName: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={unifiedBooking.clientName}
+                    onChange={(e) => setUnifiedBooking({ ...unifiedBooking, clientName: e.target.value })}
+                    className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      formErrors.clientName ? "border-red-500" : "border-gray-300"
+                    }`}
                     placeholder="Иван Петров"
                   />
+                  {formErrors.clientName && <p className="text-red-500 text-xs mt-1">{formErrors.clientName}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Телефон *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    Телефон <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="tel"
                     required
-                    value={newBooking.clientPhone}
-                    onChange={(e) => setNewBooking({ ...newBooking, clientPhone: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={unifiedBooking.clientPhone}
+                    onChange={(e) => setUnifiedBooking({ ...unifiedBooking, clientPhone: e.target.value })}
+                    className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      formErrors.clientPhone ? "border-red-500" : "border-gray-300"
+                    }`}
                     placeholder="+7 XXX XXX-XX-XX"
                   />
+                  {formErrors.clientPhone && <p className="text-red-500 text-xs mt-1">{formErrors.clientPhone}</p>}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Email (необязательно)</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Email (необязательно)</label>
                 <input
                   type="email"
-                  value={newBooking.clientEmail}
-                  onChange={(e) => setNewBooking({ ...newBooking, clientEmail: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={unifiedBooking.clientEmail}
+                  onChange={(e) => setUnifiedBooking({ ...unifiedBooking, clientEmail: e.target.value })}
+                  className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    formErrors.clientEmail ? "border-red-500" : "border-gray-300"
+                  }`}
                   placeholder="ivan.petrov@email.ru"
                 />
+                {formErrors.clientEmail && <p className="text-red-500 text-xs mt-1">{formErrors.clientEmail}</p>}
               </div>
 
-              <select
-                value={newBooking.courtId}
-                onChange={(e) => setNewBooking({ ...newBooking, courtId: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              >
-                <option value="">Выберите корт</option>
-                {COURTS.map((court) => (
-                  <option key={court.id} value={court.id}>
-                    {court.name}
-                  </option>
-                ))}
-              </select>
-
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="date"
-                  value={newBooking.date}
-                  onChange={(e) => setNewBooking({ ...newBooking, date: e.target.value })}
-                  className="p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">
+                  Выберите корт <span className="text-red-500">*</span>
+                </label>
                 <select
-                  value={newBooking.startTime}
-                  onChange={(e) => setNewBooking({ ...newBooking, startTime: e.target.value })}
-                  className="p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={unifiedBooking.courtId}
+                  onChange={(e) => setUnifiedBooking({ ...unifiedBooking, courtId: e.target.value })}
+                  className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    formErrors.courtId ? "border-red-500" : "border-gray-300"
+                  }`}
                   required
                 >
-                  <option value="">Выберите время</option>
-                  {TIME_SLOTS.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
+                  <option value="">Выберите корт</option>
+                  {COURTS.map((court) => (
+                    <option key={court.id} value={court.id}>
+                      {court.name}
                     </option>
                   ))}
                 </select>
+                {formErrors.courtId && <p className="text-red-500 text-xs mt-1">{formErrors.courtId}</p>}
               </div>
 
-              <select
-                value={newBooking.duration}
-                onChange={(e) => setNewBooking({ ...newBooking, duration: Number.parseInt(e.target.value) })}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value={60}>60 минут</option>
-                <option value={90}>90 минут</option>
-                <option value={120}>120 минут</option>
-              </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">Дата</label>
+                  <input
+                    type="date"
+                    value={unifiedBooking.date}
+                    onChange={(e) => setUnifiedBooking({ ...unifiedBooking, date: e.target.value })}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
 
-              <textarea
-                placeholder="Заметки (необязательно)"
-                rows={3}
-                value={newBooking.notes}
-                onChange={(e) => setNewBooking({ ...newBooking, notes: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">
+                    Выберите время <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={unifiedBooking.startTime}
+                    onChange={(e) => setUnifiedBooking({ ...unifiedBooking, startTime: e.target.value })}
+                    className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      formErrors.startTime ? "border-red-500" : "border-gray-300"
+                    }`}
+                    required
+                  >
+                    <option value="">Выберите время</option>
+                    {TIME_SLOTS.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.startTime && <p className="text-red-500 text-xs mt-1">{formErrors.startTime}</p>}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Длительность</label>
+                <select
+                  value={unifiedBooking.duration}
+                  onChange={(e) => setUnifiedBooking({ ...unifiedBooking, duration: Number.parseInt(e.target.value) })}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value={30}>30 минут</option>
+                  <option value={60}>60 минут</option>
+                  <option value={90}>90 минут</option>
+                  <option value={120}>120 минут</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Заметки (необязательно)</label>
+                <textarea
+                  rows={3}
+                  value={unifiedBooking.notes}
+                  onChange={(e) => setUnifiedBooking({ ...unifiedBooking, notes: e.target.value })}
+                  className={`w-full p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    formErrors.notes ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="Дополнительная информация..."
+                  maxLength={500}
+                />
+                <div className="text-xs text-gray-500 mt-1">{unifiedBooking.notes.length}/500 символов</div>
+                {formErrors.notes && <p className="text-red-500 text-xs mt-1">{formErrors.notes}</p>}
+              </div>
 
               <div className="flex gap-3 pt-2">
                 <Button
                   type="button"
                   variant="outline"
                   className="flex-1 bg-transparent"
-                  onClick={() => setShowBookingModal(false)}
+                  onClick={() => {
+                    setShowUnifiedBookingModal(false)
+                    setFormErrors({})
+                  }}
                 >
                   Отмена
                 </Button>
@@ -1800,98 +1594,62 @@ export function EnhancedAdminCalendar() {
         </Dialog>
       )}
 
-      {/* Training Session Creation Modal */}
-      {showTrainingModal && (
-        <Dialog open={showTrainingModal} onOpenChange={setShowTrainingModal}>
+      {/* Client Booking Modal for Trainer Reserved Slots */}
+      {showClientBookingModal && (
+        <Dialog open={showClientBookingModal} onOpenChange={setShowClientBookingModal}>
           <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Создать тренировочную сессию</DialogTitle>
+              <DialogTitle>Забронировать тренировку</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleTrainingSubmit} className="space-y-4">
+            <form onSubmit={handleClientBookingSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Тренер</label>
-                <select
+                <label className="block text-sm font-medium mb-2 text-gray-700">
+                  Имя клиента <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
                   required
-                  value={newTrainingSession.coachId}
-                  onChange={(e) => setNewTrainingSession({ ...newTrainingSession, coachId: e.target.value })}
+                  value={clientBookingForm.clientName}
+                  onChange={(e) => setClientBookingForm({ ...clientBookingForm, clientName: e.target.value })}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Выберите тренера</option>
-                  {COACHES.map((coach) => (
-                    <option key={coach.id} value={coach.id}>
-                      {coach.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Иван Петров"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Корт</label>
-                <select
+                <label className="block text-sm font-medium mb-2 text-gray-700">
+                  Телефон <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
                   required
-                  value={newTrainingSession.courtId}
-                  onChange={(e) => setNewTrainingSession({ ...newTrainingSession, courtId: e.target.value })}
+                  value={clientBookingForm.clientPhone}
+                  onChange={(e) => setClientBookingForm({ ...clientBookingForm, clientPhone: e.target.value })}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Выберите корт</option>
-                  {COURTS.map((court) => (
-                    <option key={court.id} value={court.id}>
-                      {court.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Дата</label>
-                  <input
-                    type="date"
-                    required
-                    value={newTrainingSession.date}
-                    onChange={(e) => setNewTrainingSession({ ...newTrainingSession, date: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Время</label>
-                  <select
-                    required
-                    value={newTrainingSession.startTime}
-                    onChange={(e) => setNewTrainingSession({ ...newTrainingSession, startTime: e.target.value })}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Выберите время</option>
-                    {TIME_SLOTS.map((time) => (
-                      <option key={time} value={time}>
-                        {time}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  placeholder="+7 XXX XXX-XX-XX"
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Длительность</label>
-                <select
-                  value={newTrainingSession.duration}
-                  onChange={(e) =>
-                    setNewTrainingSession({ ...newTrainingSession, duration: Number.parseInt(e.target.value) })
-                  }
+                <label className="block text-sm font-medium mb-2 text-gray-700">Email (необязательно)</label>
+                <input
+                  type="email"
+                  value={clientBookingForm.clientEmail}
+                  onChange={(e) => setClientBookingForm({ ...clientBookingForm, clientEmail: e.target.value })}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value={60}>60 минут</option>
-                  <option value={90}>90 минут</option>
-                  <option value={120}>120 минут</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">Минимальная длительность тренировки: 60 минут</p>
+                  placeholder="ivan.petrov@email.ru"
+                />
               </div>
 
-              <div className="bg-purple-50 p-4 rounded-md">
-                <p className="text-sm text-purple-800">
-                  <strong>Примечание:</strong> Это создаст зарезервированные слоты для тренера минимум на 60 минут.
-                  Клиенты смогут забронировать эти слоты отдельно.
-                </p>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Заметки</label>
+                <textarea
+                  rows={3}
+                  value={clientBookingForm.notes}
+                  onChange={(e) => setClientBookingForm({ ...clientBookingForm, notes: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Дополнительная информация..."
+                />
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -1899,12 +1657,12 @@ export function EnhancedAdminCalendar() {
                   type="button"
                   variant="outline"
                   className="flex-1 bg-transparent"
-                  onClick={() => setShowTrainingModal(false)}
+                  onClick={() => setShowClientBookingModal(false)}
                 >
                   Отмена
                 </Button>
                 <Button type="submit" className="flex-1 bg-purple-600 hover:bg-purple-700">
-                  Создать сессию
+                  Забронировать
                 </Button>
               </div>
             </form>

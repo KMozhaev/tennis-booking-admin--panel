@@ -10,18 +10,17 @@ export interface Coach {
   rating: number // 1-5 scale
   isActive: boolean
   createdAt: Date
-  description?: string
+  color: string
 }
 
-export enum SlotStatus {
-  FREE = "free",
-  COURT_PAID = "court_paid",
-  COURT_UNPAID = "court_unpaid",
-  TRAINING_PAID = "training_paid",
-  TRAINING_UNPAID = "training_unpaid",
-  TRAINER_RESERVED = "trainer_reserved",
-  BLOCKED = "blocked",
-}
+export type SlotStatus =
+  | "free"
+  | "court_paid"
+  | "court_unpaid"
+  | "training_paid"
+  | "training_unpaid"
+  | "trainer_reserved"
+  | "blocked"
 
 export interface MergedSlot {
   id: string
@@ -39,15 +38,14 @@ export interface BookingSlot {
   date: string
   time: string
   status: SlotStatus
-  price?: number
   clientName?: string
-  trainerName?: string
-  paymentStatus?: "paid" | "unpaid"
-  blockReason?: string
-  duration?: number
   clientPhone?: string
   clientEmail?: string
+  trainerName?: string
+  price?: number
+  duration?: number
   notes?: string
+  blockReason?: string
 }
 
 export interface TrainingSession {
@@ -84,6 +82,18 @@ export interface DailyFinancials {
   totalUnpaid: number
   unpaidCount: number
   occupancyRate: number
+}
+
+export interface Client {
+  id: string
+  name: string
+  phone: string
+  email?: string
+  totalBookings: number
+  totalSpent: number
+  status: "active" | "vip" | "inactive"
+  lastBooking: string
+  registrationDate: string
 }
 
 export const SPECIALIZATIONS = [

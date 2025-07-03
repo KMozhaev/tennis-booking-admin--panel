@@ -16,7 +16,7 @@ const getFilterConfig = (filter: FilterType) => {
     case "booked_courts":
       return { color: "bg-blue-500 text-white hover:bg-blue-600", emoji: "🔵", label: "Забронированные корты" }
     case "unpaid":
-      return { color: "bg-orange-500 text-white hover:bg-orange-600", emoji: "⚠️", label: "Неоплаченные" }
+      return { color: "bg-orange-500 text-white hover:bg-orange-600", emoji: "🔵", label: "Неоплаченные" }
     case "booked_trainings":
       return { color: "bg-purple-500 text-white hover:bg-purple-600", emoji: "🟣", label: "Забронированные тренировки" }
     case "available_trainings":
@@ -72,9 +72,7 @@ export function BookingFilters({ activeFilters, onFilterChange, unpaidCount = 0 
         className={`h-7 text-xs ${getFilterConfig("unpaid")?.color}`}
       >
         {getFilterConfig("unpaid")?.emoji} {getFilterConfig("unpaid")?.label}
-        {unpaidCount > 0 && (
-          <Badge className="ml-1 h-4 px-1 text-xs bg-orange-200 text-orange-800">{unpaidCount}</Badge>
-        )}
+        {unpaidCount > 0 && <Badge className="ml-1 h-4 px-1 text-xs bg-white text-orange-600">{unpaidCount}</Badge>}
       </Button>
 
       <Button
