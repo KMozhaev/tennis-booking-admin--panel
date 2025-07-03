@@ -34,11 +34,12 @@ export function FinancialSummary({ financials, selectedDate }: FinancialSummaryP
   }
 
   return (
-    <div className="bg-white border-b border-gray-200 p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-6">
+    <div className="bg-white border-b border-gray-200 py-2 px-4">
+      {/* Optimized Header Layout - Single Row */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-6 flex-wrap">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-600">💰 {formatDate(selectedDate)}:</span>
+            <span className="text-lg font-semibold text-gray-900">{formatDate(selectedDate)}:</span>
             <div className="flex items-center gap-1">
               <CheckCircle className="h-4 w-4 text-green-600" />
               <span className="font-semibold text-green-700">{formatCurrency(financials.totalPaid)}</span>
@@ -52,7 +53,7 @@ export function FinancialSummary({ financials, selectedDate }: FinancialSummaryP
 
           <div className="h-6 w-px bg-gray-300" />
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-1">
               <AlertTriangle className="h-4 w-4 text-orange-600" />
               <span className="text-sm text-gray-600">Неоплачено:</span>

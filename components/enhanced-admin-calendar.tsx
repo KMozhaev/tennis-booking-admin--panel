@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { User, Clock, Plus, Search, CheckCircle, AlertCircle } from "lucide-react"
+import { Clock, Plus, Search } from "lucide-react"
 import { FinancialSummary } from "./financial-summary"
 import { BookingFilters, type FilterType } from "./booking-filters"
-import { SlotLegend } from "./slot-legend"
 import type { BookingSlot, SlotStatus, DailyFinancials, MergedSlot } from "../types/coach-types"
 
 // Existing interfaces remain the same
@@ -57,6 +56,7 @@ interface NewBooking {
   clientEmail?: string
   duration: number
   notes: string
+  bookingType: "court" | "training_with_coach"
 }
 
 interface NewTrainingSession {
@@ -85,7 +85,7 @@ interface ClientBookingForm {
   notes: string
 }
 
-// Demo data with updated realistic information
+// Demo data with updated realistic information - Updated to July 2025
 const COURTS: Court[] = [
   { id: "1", name: "Корт 1 (Хард)", type: "hard", basePrice: 600 },
   { id: "2", name: "Корт 2 (Хард)", type: "hard", basePrice: 480 },
@@ -104,7 +104,7 @@ const DEMO_CLIENTS: Client[] = [
     totalBookings: 24,
     totalSpent: 48600,
     status: "vip",
-    lastBooking: "2025-01-01",
+    lastBooking: "2025-07-01",
     registrationDate: "2024-01-15",
   },
   {
@@ -115,7 +115,7 @@ const DEMO_CLIENTS: Client[] = [
     totalBookings: 12,
     totalSpent: 18900,
     status: "active",
-    lastBooking: "2024-12-28",
+    lastBooking: "2025-06-28",
     registrationDate: "2024-03-10",
   },
   {
@@ -126,7 +126,7 @@ const DEMO_CLIENTS: Client[] = [
     totalBookings: 8,
     totalSpent: 12400,
     status: "active",
-    lastBooking: "2024-12-25",
+    lastBooking: "2025-06-25",
     registrationDate: "2024-04-05",
   },
   {
@@ -137,7 +137,7 @@ const DEMO_CLIENTS: Client[] = [
     totalBookings: 45,
     totalSpent: 89200,
     status: "vip",
-    lastBooking: "2024-12-30",
+    lastBooking: "2025-06-30",
     registrationDate: "2023-08-20",
   },
   {
@@ -147,18 +147,18 @@ const DEMO_CLIENTS: Client[] = [
     totalBookings: 3,
     totalSpent: 4500,
     status: "inactive",
-    lastBooking: "2024-11-15",
+    lastBooking: "2025-05-15",
     registrationDate: "2024-05-01",
   },
 ]
 
-// Comprehensive demo data with 60%+ occupancy
+// Comprehensive demo data with 60%+ occupancy - Updated to July 2025
 const ENHANCED_DEMO_DATA: BookingSlot[] = [
   // Morning slots (08:00-12:00) - 40-50% occupancy
   {
     id: "demo_001",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "08:00",
     status: "court_paid" as SlotStatus,
     clientName: "Анна Петрова",
@@ -169,7 +169,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_002",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "08:30",
     status: "court_paid" as SlotStatus,
     clientName: "Анна Петрова",
@@ -180,7 +180,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_003",
     courtId: "2",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "09:00",
     status: "training_paid" as SlotStatus,
     trainerName: "Дмитрий Козлов",
@@ -192,7 +192,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_004",
     courtId: "2",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "09:30",
     status: "training_paid" as SlotStatus,
     trainerName: "Дмитрий Козлов",
@@ -204,7 +204,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_005",
     courtId: "2",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "10:00",
     status: "training_paid" as SlotStatus,
     trainerName: "Дмитрий Козлов",
@@ -216,7 +216,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_006",
     courtId: "3",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "10:30",
     status: "court_unpaid" as SlotStatus,
     clientName: "Елена Смирнова",
@@ -227,7 +227,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_007",
     courtId: "3",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "11:00",
     status: "court_unpaid" as SlotStatus,
     clientName: "Елена Смирнова",
@@ -238,7 +238,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_008",
     courtId: "4",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "11:30",
     status: "trainer_reserved" as SlotStatus,
     trainerName: "Анна Петрова",
@@ -249,7 +249,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_009",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "12:00",
     status: "court_paid" as SlotStatus,
     clientName: "Игорь Соколов",
@@ -260,7 +260,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_010",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "12:30",
     status: "court_paid" as SlotStatus,
     clientName: "Игорь Соколов",
@@ -271,7 +271,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_011",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "13:00",
     status: "court_paid" as SlotStatus,
     clientName: "Игорь Соколов",
@@ -282,7 +282,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_012",
     courtId: "2",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "13:30",
     status: "training_unpaid" as SlotStatus,
     trainerName: "Елена Сидорова",
@@ -294,7 +294,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_013",
     courtId: "2",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "14:00",
     status: "training_unpaid" as SlotStatus,
     trainerName: "Елена Сидорова",
@@ -306,7 +306,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_014",
     courtId: "3",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "14:30",
     status: "court_paid" as SlotStatus,
     clientName: "Сергей Николаев",
@@ -317,7 +317,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_015",
     courtId: "3",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "15:00",
     status: "court_paid" as SlotStatus,
     clientName: "Сергей Николаев",
@@ -328,7 +328,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_016",
     courtId: "4",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "15:30",
     status: "training_paid" as SlotStatus,
     trainerName: "Михаил Иванов",
@@ -340,7 +340,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_017",
     courtId: "4",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "16:00",
     status: "training_paid" as SlotStatus,
     trainerName: "Михаил Иванов",
@@ -352,7 +352,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_018",
     courtId: "4",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "16:30",
     status: "training_paid" as SlotStatus,
     trainerName: "Михаил Иванов",
@@ -364,7 +364,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_019",
     courtId: "5",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "17:00",
     status: "court_unpaid" as SlotStatus,
     clientName: "Александр Волков",
@@ -375,7 +375,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_020",
     courtId: "5",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "17:30",
     status: "court_unpaid" as SlotStatus,
     clientName: "Александр Волков",
@@ -388,7 +388,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_021",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "18:00",
     status: "training_paid" as SlotStatus,
     trainerName: "Дмитрий Козлов",
@@ -400,7 +400,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_022",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "18:30",
     status: "training_paid" as SlotStatus,
     trainerName: "Дмитрий Козлов",
@@ -412,7 +412,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_023",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "19:00",
     status: "training_paid" as SlotStatus,
     trainerName: "Дмитрий Козлов",
@@ -424,7 +424,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_024",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "19:30",
     status: "training_paid" as SlotStatus,
     trainerName: "Дмитрий Козлов",
@@ -436,7 +436,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_025",
     courtId: "2",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "18:30",
     status: "court_paid" as SlotStatus,
     clientName: "Наталья Кузнецова",
@@ -447,7 +447,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_026",
     courtId: "2",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "19:00",
     status: "court_paid" as SlotStatus,
     clientName: "Наталья Кузнецова",
@@ -458,7 +458,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_027",
     courtId: "2",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "19:30",
     status: "court_paid" as SlotStatus,
     clientName: "Наталья Кузнецова",
@@ -469,7 +469,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_028",
     courtId: "3",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "18:00",
     status: "training_unpaid" as SlotStatus,
     trainerName: "Анна Петрова",
@@ -481,7 +481,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_029",
     courtId: "3",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "18:30",
     status: "training_unpaid" as SlotStatus,
     trainerName: "Анна Петрова",
@@ -493,7 +493,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_030",
     courtId: "3",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "19:30",
     status: "court_paid" as SlotStatus,
     clientName: "Ирина Васильева",
@@ -504,7 +504,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_031",
     courtId: "3",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "20:00",
     status: "court_paid" as SlotStatus,
     clientName: "Ирина Васильева",
@@ -515,7 +515,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_032",
     courtId: "4",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "19:00",
     status: "trainer_reserved" as SlotStatus,
     trainerName: "Елена Сидорова",
@@ -524,7 +524,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_033",
     courtId: "4",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "19:30",
     status: "trainer_reserved" as SlotStatus,
     trainerName: "Елена Сидорова",
@@ -533,7 +533,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_034",
     courtId: "4",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "20:00",
     status: "trainer_reserved" as SlotStatus,
     trainerName: "Елена Сидорова",
@@ -542,7 +542,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_035",
     courtId: "5",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "18:30",
     status: "court_unpaid" as SlotStatus,
     clientName: "Павел Морозов",
@@ -553,7 +553,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_036",
     courtId: "5",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "19:00",
     status: "court_unpaid" as SlotStatus,
     clientName: "Павел Морозов",
@@ -564,7 +564,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_037",
     courtId: "5",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "19:30",
     status: "court_unpaid" as SlotStatus,
     clientName: "Павел Морозов",
@@ -575,7 +575,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_038",
     courtId: "5",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "20:30",
     status: "training_paid" as SlotStatus,
     trainerName: "Михаил Иванов",
@@ -587,7 +587,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_039",
     courtId: "5",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "21:00",
     status: "training_paid" as SlotStatus,
     trainerName: "Михаил Иванов",
@@ -601,7 +601,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_040",
     courtId: "2",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "20:30",
     status: "court_paid" as SlotStatus,
     clientName: "Андрей Козлов",
@@ -612,7 +612,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_041",
     courtId: "2",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "21:00",
     status: "court_paid" as SlotStatus,
     clientName: "Андрей Козлов",
@@ -623,7 +623,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_042",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "20:30",
     status: "court_unpaid" as SlotStatus,
     clientName: "Юлия Сидорова",
@@ -634,7 +634,7 @@ const ENHANCED_DEMO_DATA: BookingSlot[] = [
   {
     id: "demo_043",
     courtId: "1",
-    date: "2025-01-03",
+    date: "2025-07-03",
     time: "21:00",
     status: "court_unpaid" as SlotStatus,
     clientName: "Юлия Сидорова",
@@ -670,7 +670,7 @@ const getSlotColors = (status: SlotStatus) => {
     case "training_paid":
       return "bg-purple-500 text-white hover:bg-purple-600"
     case "training_unpaid":
-      return "bg-purple-300 text-white hover:bg-purple-400"
+      return "bg-purple-400 text-white hover:bg-purple-500"
     case "trainer_reserved":
       return "bg-green-500 text-white hover:bg-green-600"
     case "blocked":
@@ -738,8 +738,123 @@ const mergeTrainingSlots = (slots: BookingSlot[], courtId: string, date: string)
   return mergedSlots
 }
 
+// Court booking slot merging algorithm
+const mergeCourtBookingSlots = (slots: BookingSlot[], courtId: string, date: string): MergedSlot[] => {
+  const courtSlots = slots.filter((s) => s.courtId === courtId && s.date === date)
+  const mergedSlots: MergedSlot[] = []
+  const processed = new Set<string>()
+
+  for (const slot of courtSlots) {
+    if (processed.has(slot.id) || !slot.status.includes("court")) {
+      continue
+    }
+
+    // Find consecutive slots for same client
+    const consecutiveSlots = [slot]
+    processed.add(slot.id)
+
+    let currentTime = slot.time
+    while (true) {
+      const [hours, minutes] = currentTime.split(":").map(Number)
+      const nextMinutes = minutes + 30
+      const nextHours = hours + Math.floor(nextMinutes / 60)
+      const finalMinutes = nextMinutes % 60
+      const nextTime = `${nextHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`
+
+      const nextSlot = courtSlots.find(
+        (s) =>
+          s.time === nextTime && s.clientName === slot.clientName && s.status === slot.status && !processed.has(s.id),
+      )
+
+      if (!nextSlot) break
+
+      consecutiveSlots.push(nextSlot)
+      processed.add(nextSlot.id)
+      currentTime = nextTime
+    }
+
+    if (consecutiveSlots.length > 1) {
+      const totalPrice = consecutiveSlots.reduce((sum, s) => sum + (s.price || 0), 0)
+      const duration = consecutiveSlots.length * 30
+
+      mergedSlots.push({
+        id: `merged-court-${slot.id}`,
+        startTime: slot.time,
+        endTime: consecutiveSlots[consecutiveSlots.length - 1].time,
+        duration,
+        totalPrice,
+        spanSlots: consecutiveSlots.length,
+        originalSlots: consecutiveSlots,
+      })
+    }
+  }
+
+  return mergedSlots
+}
+
+// Isolated slot prevention algorithm
+const validateSlotBooking = (
+  slots: BookingSlot[],
+  courtId: string,
+  date: string,
+  startTime: string,
+  duration: number,
+): {
+  isValid: boolean
+  suggestion?: string
+  reason?: string
+} => {
+  const slotsNeeded = duration / 30
+  const courtSlots = slots.filter((s) => s.courtId === courtId && s.date === date && s.status !== "free")
+
+  // Check for isolated slots that would be created
+  for (let i = 0; i < slotsNeeded; i++) {
+    const [hours, minutes] = startTime.split(":").map(Number)
+    const slotMinutes = minutes + i * 30
+    const slotHours = hours + Math.floor(slotMinutes / 60)
+    const finalMinutes = slotMinutes % 60
+    const currentSlotTime = `${slotHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`
+
+    // Check previous slot
+    const prevMinutes = finalMinutes - 30
+    const prevHours = slotHours + Math.floor(prevMinutes / 60)
+    const prevFinalMinutes = prevMinutes < 0 ? 60 + prevMinutes : prevMinutes
+    const prevTime = `${(prevHours < 0 ? 23 : prevHours).toString().padStart(2, "0")}:${prevFinalMinutes.toString().padStart(2, "0")}`
+
+    // Check next slot after booking end
+    const nextMinutes = finalMinutes + 30
+    const nextHours = slotHours + Math.floor(nextMinutes / 60)
+    const nextFinalMinutes = nextMinutes % 60
+    const nextTime = `${nextHours.toString().padStart(2, "0")}:${nextFinalMinutes.toString().padStart(2, "0")}`
+
+    const prevSlot = courtSlots.find((s) => s.time === prevTime)
+    const nextSlot = courtSlots.find((s) => s.time === nextTime)
+
+    // Check if we would create a 30-minute gap
+    if (prevSlot && nextSlot) {
+      const timeBetweenPrevAndNext = getTimeDifference(prevTime, nextTime)
+      if (timeBetweenPrevAndNext === 60) {
+        // Would create isolated 30-minute slot
+        return {
+          isValid: false,
+          suggestion: `Рекомендуем забронировать на ${duration + 30} минут или выбрать другое время`,
+          reason: "Бронирование создаст изолированный 30-минутный слот",
+        }
+      }
+    }
+  }
+
+  return { isValid: true }
+}
+
+const getTimeDifference = (time1: string, time2: string): number => {
+  const [h1, m1] = time1.split(":").map(Number)
+  const [h2, m2] = time2.split(":").map(Number)
+  return h2 * 60 + m2 - (h1 * 60 + m1)
+}
+
 export function EnhancedAdminCalendar() {
-  const [selectedDate, setSelectedDate] = useState("2025-01-03")
+  const [selectedDate, setSelectedDate] = useState("2025-07-03")
   const [courtTypeFilter, setCourtTypeFilter] = useState<"all" | "hard" | "clay" | "indoor">("all")
   const [activeFilters, setActiveFilters] = useState<FilterType[]>(["all"])
   const [selectedSlot, setSelectedSlot] = useState<BookingSlot | null>(null)
@@ -762,6 +877,7 @@ export function EnhancedAdminCalendar() {
     clientEmail: "",
     duration: 60,
     notes: "",
+    bookingType: "court",
   })
   const [newTrainingSession, setNewTrainingSession] = useState<NewTrainingSession>({
     coachId: "",
@@ -782,7 +898,7 @@ export function EnhancedAdminCalendar() {
     notes: "",
   })
 
-  // Calculate daily financials
+  // Calculate daily financials with mathematical accuracy
   const dailyFinancials = useMemo((): DailyFinancials => {
     const daySlots = bookingSlots.filter((slot) => slot.date === selectedDate)
     const totalSlots = COURTS.length * TIME_SLOTS.length
@@ -835,6 +951,16 @@ export function EnhancedAdminCalendar() {
     return merged
   }, [bookingSlots, selectedDate])
 
+  // Get merged court booking slots for each court
+  const mergedCourtSlotsByCourtAndDate = useMemo(() => {
+    const merged: Record<string, MergedSlot[]> = {}
+    for (const court of COURTS) {
+      const key = `${court.id}-${selectedDate}`
+      merged[key] = mergeCourtBookingSlots(bookingSlots, court.id, selectedDate)
+    }
+    return merged
+  }, [bookingSlots, selectedDate])
+
   // Get slot data for specific court and time
   const getSlotData = (courtId: string, date: string, time: string): BookingSlot => {
     const existingSlot = bookingSlots.find(
@@ -859,10 +985,16 @@ export function EnhancedAdminCalendar() {
     }
   }
 
-  // Check if slot is part of a merged training session
+  // Check if slot is part of a merged session (training or court)
   const isSlotMerged = (courtId: string, time: string): MergedSlot | null => {
-    const mergedSlots = mergedSlotsByCourtAndDate[`${courtId}-${selectedDate}`] || []
-    return mergedSlots.find((merged) => merged.originalSlots.some((slot) => slot.time === time)) || null
+    const mergedTrainingSlots = mergedSlotsByCourtAndDate[`${courtId}-${selectedDate}`] || []
+    const mergedCourtSlots = mergedCourtSlotsByCourtAndDate[`${courtId}-${selectedDate}`] || []
+
+    return (
+      mergedTrainingSlots.find((merged) => merged.originalSlots.some((slot) => slot.time === time)) ||
+      mergedCourtSlots.find((merged) => merged.originalSlots.some((slot) => slot.time === time)) ||
+      null
+    )
   }
 
   // Check if slot is the first slot of a merged training session
@@ -875,7 +1007,7 @@ export function EnhancedAdminCalendar() {
   const shouldShowSlot = (slot: BookingSlot): boolean => {
     if (activeFilters.includes("all")) return true
 
-    if (activeFilters.includes("courts") && (slot.status === "court_paid" || slot.status === "court_unpaid")) {
+    if (activeFilters.includes("booked_courts") && (slot.status === "court_paid" || slot.status === "court_unpaid")) {
       return true
     }
 
@@ -883,11 +1015,14 @@ export function EnhancedAdminCalendar() {
       return true
     }
 
-    if (activeFilters.includes("trainings") && (slot.status === "training_paid" || slot.status === "training_unpaid")) {
+    if (
+      activeFilters.includes("booked_trainings") &&
+      (slot.status === "training_paid" || slot.status === "training_unpaid")
+    ) {
       return true
     }
 
-    if (activeFilters.includes("available") && slot.status === "trainer_reserved") {
+    if (activeFilters.includes("available_trainings") && slot.status === "trainer_reserved") {
       return true
     }
 
@@ -940,6 +1075,7 @@ export function EnhancedAdminCalendar() {
         courtId: slotClickData.courtId,
         startTime: slotClickData.time,
         date: slotClickData.date,
+        bookingType: "court",
       })
       setShowBookingModal(true)
     } else {
@@ -971,7 +1107,24 @@ export function EnhancedAdminCalendar() {
     const court = COURTS.find((c) => c.id === newBooking.courtId)
     const price = court ? calculateSlotPrice(court.basePrice, newBooking.startTime) : 0
 
-    // Generate slots based on duration
+    // Validate slot booking to prevent isolated slots
+    const validation = validateSlotBooking(
+      bookingSlots,
+      newBooking.courtId,
+      newBooking.date,
+      newBooking.startTime,
+      newBooking.duration,
+    )
+
+    if (!validation.isValid) {
+      if (confirm(`${validation.reason}\n\n${validation.suggestion}\n\nВы хотите продолжить с текущими параметрами?`)) {
+        // User chose to proceed despite warning
+      } else {
+        return // Cancel booking
+      }
+    }
+
+    // Generate slots based on duration and booking type
     const slotsNeeded = newBooking.duration / 30
     const newSlots: BookingSlot[] = []
 
@@ -982,15 +1135,27 @@ export function EnhancedAdminCalendar() {
       const finalMinutes = slotMinutes % 60
       const slotTime = `${slotHours.toString().padStart(2, "0")}:${finalMinutes.toString().padStart(2, "0")}`
 
+      let status: SlotStatus
+      let trainerName: string | undefined
+
+      if (newBooking.bookingType === "training_with_coach") {
+        status = "training_unpaid" as SlotStatus
+        const coach = COACHES.find((c) => c.id === newBooking.coachId)
+        trainerName = coach?.name
+      } else {
+        status = "court_unpaid" as SlotStatus
+      }
+
       newSlots.push({
         id: `${Date.now()}-${i}`,
         courtId: newBooking.courtId,
         date: newBooking.date,
         time: slotTime,
-        status: "court_unpaid" as SlotStatus,
+        status,
         clientName: newBooking.clientName,
         clientPhone: newBooking.clientPhone,
         clientEmail: newBooking.clientEmail,
+        trainerName,
         price: i === 0 ? price * slotsNeeded : 0, // Only first slot has price
         duration: newBooking.duration,
         notes: newBooking.notes,
@@ -1015,6 +1180,7 @@ export function EnhancedAdminCalendar() {
       clientEmail: "",
       duration: 60,
       notes: "",
+      bookingType: "court",
     })
     setSelectedClient(null)
   }
@@ -1022,7 +1188,7 @@ export function EnhancedAdminCalendar() {
   const handleClientBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Update trainer reserved slot to training session
+    // Update trainer reserved slot to training session with proper purple coloring
     setBookingSlots(
       bookingSlots.map((slot) =>
         slot.id === clientBookingForm.sessionId
@@ -1054,8 +1220,9 @@ export function EnhancedAdminCalendar() {
 
     const coach = COACHES.find((c) => c.id === newTrainingSession.coachId)
 
-    // Generate slots for minimum 60 minutes
-    const slotsNeeded = Math.max(2, newTrainingSession.duration / 30) // Minimum 2 slots (60 min)
+    // Enforce minimum 60 minutes (2 slots) for training sessions
+    const slotsNeeded = Math.max(2, newTrainingSession.duration / 30)
+    const actualDuration = slotsNeeded * 30
     const newSlots: BookingSlot[] = []
 
     for (let i = 0; i < slotsNeeded; i++) {
@@ -1072,7 +1239,7 @@ export function EnhancedAdminCalendar() {
         time: slotTime,
         status: "trainer_reserved" as SlotStatus,
         trainerName: coach?.name,
-        duration: newTrainingSession.duration,
+        duration: actualDuration,
       })
     }
 
@@ -1098,31 +1265,38 @@ export function EnhancedAdminCalendar() {
 
   const renderSlotContent = (slot: BookingSlot, merged?: MergedSlot) => {
     if (merged) {
-      // Render merged training session content
       const originalSlot = merged.originalSlots[0]
-      return (
-        <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-          <div className="font-bold text-sm truncate flex items-center gap-1">
-            <User className="h-3 w-3 flex-shrink-0" />
-            <span className="truncate">{originalSlot.trainerName}</span>
-          </div>
-          {originalSlot.clientName ? (
-            <div className="text-xs opacity-75 truncate mt-1 flex items-center gap-1">
-              {originalSlot.status === "training_paid" ? (
-                <CheckCircle className="h-3 w-3 flex-shrink-0" />
-              ) : (
-                <AlertCircle className="h-3 w-3 flex-shrink-0" />
-              )}
-              <span className="truncate">{originalSlot.clientName}</span>
+
+      // Handle merged court bookings
+      if (originalSlot.status.includes("court")) {
+        return (
+          <div className="p-2 h-full flex flex-col justify-center items-center text-center overflow-hidden">
+            <div className="font-bold text-sm truncate text-white drop-shadow-sm">{originalSlot.clientName}</div>
+            <div className="text-xs opacity-90 mt-1 text-white drop-shadow-sm">
+              {merged.duration} мин • {merged.totalPrice}₽
             </div>
-          ) : (
-            <div className="text-xs opacity-75 mt-1">Доступно</div>
-          )}
-          <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
+            <div className="text-xs mt-1 text-white drop-shadow-sm">
+              {originalSlot.status === "court_paid" ? "✅" : "⏳"}
+            </div>
+          </div>
+        )
+      }
+
+      // Handle merged training sessions with consistent purple styling
+      return (
+        <div className="p-2 h-full flex flex-col justify-center items-center text-center overflow-hidden">
+          <div className="font-bold text-sm truncate text-white drop-shadow-sm">{originalSlot.trainerName}</div>
+          <div className="text-xs truncate mt-1 text-white drop-shadow-sm">{originalSlot.clientName}</div>
+          <div className="text-xs opacity-90 flex items-center gap-1 mt-1 text-white drop-shadow-sm">
             <Clock className="h-3 w-3 flex-shrink-0" />
             <span>{merged.duration} мин</span>
           </div>
-          {merged.totalPrice > 0 && <div className="text-xs font-semibold mt-1">{merged.totalPrice}₽</div>}
+          {merged.totalPrice > 0 && (
+            <div className="text-xs font-semibold mt-1 text-white drop-shadow-sm">{merged.totalPrice}₽</div>
+          )}
+          <div className="text-xs mt-1 text-white drop-shadow-sm">
+            {originalSlot.status === "training_paid" ? "✅" : "⏳"}
+          </div>
         </div>
       )
     }
@@ -1130,59 +1304,59 @@ export function EnhancedAdminCalendar() {
     switch (slot.status) {
       case "free":
         return (
-          <div className="p-2 h-full flex flex-col justify-center">
-            <div className="font-semibold text-sm">{slot.price}₽</div>
-            <div className="text-xs mt-1">30 мин</div>
+          <div className="p-2 h-full flex flex-col justify-center items-center text-center">
+            <div className="font-semibold text-sm text-gray-700">{slot.price}₽</div>
+            <div className="text-xs mt-1 text-gray-600">30 мин</div>
           </div>
         )
 
       case "court_paid":
         return (
-          <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-            <div className="font-bold text-sm truncate">{slot.clientName}</div>
-            <div className="text-xs mt-1">✅</div>
+          <div className="p-2 h-full flex flex-col justify-center items-center text-center overflow-hidden">
+            <div className="font-bold text-sm truncate text-white drop-shadow-sm">{slot.clientName}</div>
+            <div className="text-xs mt-1 text-white drop-shadow-sm">✅</div>
           </div>
         )
 
       case "court_unpaid":
         return (
-          <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-            <div className="font-bold text-sm truncate">{slot.clientName}</div>
-            <div className="text-xs mt-1">⏳</div>
+          <div className="p-2 h-full flex flex-col justify-center items-center text-center overflow-hidden">
+            <div className="font-bold text-sm truncate text-white drop-shadow-sm">{slot.clientName}</div>
+            <div className="text-xs mt-1 text-white drop-shadow-sm">⏳</div>
           </div>
         )
 
       case "training_paid":
         return (
-          <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-            <div className="font-bold text-xs truncate">{slot.trainerName}</div>
-            <div className="text-xs truncate">{slot.clientName}</div>
-            <div className="text-xs mt-1">✅</div>
+          <div className="p-2 h-full flex flex-col justify-center items-center text-center overflow-hidden">
+            <div className="font-bold text-sm truncate text-white drop-shadow-sm">{slot.trainerName}</div>
+            <div className="text-xs truncate mt-1 text-white drop-shadow-sm">{slot.clientName}</div>
+            <div className="text-xs mt-1 text-white drop-shadow-sm">✅</div>
           </div>
         )
 
       case "training_unpaid":
         return (
-          <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-            <div className="font-bold text-xs truncate">{slot.trainerName}</div>
-            <div className="text-xs truncate">{slot.clientName}</div>
-            <div className="text-xs mt-1">⏳</div>
+          <div className="p-2 h-full flex flex-col justify-center items-center text-center overflow-hidden">
+            <div className="font-bold text-sm truncate text-white drop-shadow-sm">{slot.trainerName}</div>
+            <div className="text-xs truncate mt-1 text-white drop-shadow-sm">{slot.clientName}</div>
+            <div className="text-xs mt-1 text-white drop-shadow-sm">⏳</div>
           </div>
         )
 
       case "trainer_reserved":
         return (
-          <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-            <div className="font-bold text-sm truncate">{slot.trainerName}</div>
-            <div className="text-xs opacity-75 mt-1">Доступно</div>
+          <div className="p-2 h-full flex flex-col justify-center items-center text-center overflow-hidden">
+            <div className="font-bold text-sm truncate text-white drop-shadow-sm">{slot.trainerName}</div>
+            <div className="text-xs opacity-90 mt-1 text-white drop-shadow-sm">Доступно</div>
           </div>
         )
 
       case "blocked":
         return (
-          <div className="p-2 h-full flex flex-col justify-center overflow-hidden">
-            <div className="font-bold text-sm truncate">Заблокировано</div>
-            <div className="text-xs opacity-90 mt-1 truncate">{slot.blockReason}</div>
+          <div className="p-2 h-full flex flex-col justify-center items-center text-center overflow-hidden">
+            <div className="font-bold text-sm truncate text-white drop-shadow-sm">Заблокировано</div>
+            <div className="text-xs opacity-90 mt-1 truncate text-white drop-shadow-sm">{slot.blockReason}</div>
           </div>
         )
 
@@ -1193,12 +1367,12 @@ export function EnhancedAdminCalendar() {
 
   return (
     <div className="h-screen flex flex-col bg-white">
-      {/* Financial Summary */}
+      {/* Optimized Financial Summary Header */}
       <FinancialSummary financials={dailyFinancials} selectedDate={selectedDate} />
 
-      {/* Filters Section */}
-      <div className="bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center gap-4">
+      {/* Compact Filters Section - Single Row Layout */}
+      <div className="bg-white border-b border-gray-200 py-2 px-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <input
             type="date"
             value={selectedDate}
@@ -1217,25 +1391,26 @@ export function EnhancedAdminCalendar() {
             <option value="indoor">Крытый</option>
           </select>
 
-          <div className="ml-auto flex gap-2">
+          <div className="flex-1">
+            <BookingFilters
+              activeFilters={activeFilters}
+              onFilterChange={setActiveFilters}
+              unpaidCount={dailyFinancials.unpaidCount}
+            />
+          </div>
+
+          <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowBookingModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Бронирование
             </Button>
-            <Button className="bg-purple-600 hover:bg-purple-700" onClick={() => setShowTrainingModal(true)}>
+            <Button className="bg-green-600 hover:bg-green-700" onClick={() => setShowTrainingModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Тренировка
             </Button>
           </div>
         </div>
       </div>
-
-      {/* Booking Filters */}
-      <BookingFilters
-        activeFilters={activeFilters}
-        onFilterChange={setActiveFilters}
-        unpaidCount={dailyFinancials.unpaidCount}
-      />
 
       {/* Calendar Grid */}
       <div className="flex-1 overflow-auto">
@@ -1253,7 +1428,7 @@ export function EnhancedAdminCalendar() {
             <span className="text-sm font-semibold text-gray-700">Время</span>
           </div>
 
-          {/* Court headers */}
+          {/* Court headers with updated price format */}
           {filteredCourts.map((court) => (
             <div
               key={court.id}
@@ -1261,7 +1436,7 @@ export function EnhancedAdminCalendar() {
             >
               <div>
                 <div className="font-semibold text-gray-900">{court.name}</div>
-                <div className="text-xs text-gray-500">от {court.basePrice}₽</div>
+                <div className="text-xs text-gray-500">от {court.basePrice}₽ /30 мин</div>
               </div>
             </div>
           ))}
@@ -1269,7 +1444,7 @@ export function EnhancedAdminCalendar() {
           {/* Time slots */}
           {TIME_SLOTS.map((time) => (
             <React.Fragment key={time}>
-              {/* Time label - ALWAYS WHITE */}
+              {/* Time label */}
               <div className="bg-white text-sm font-semibold py-2 px-3 text-right sticky left-0 z-10 border-r border-b border-gray-300 flex items-center justify-end text-gray-700">
                 {time}
               </div>
@@ -1321,10 +1496,7 @@ export function EnhancedAdminCalendar() {
         </div>
       </div>
 
-      {/* Slot Legend */}
-      <SlotLegend />
-
-      {/* All existing modals remain the same */}
+      {/* All existing modals with updated terminology */}
       {/* Slot Choice Modal */}
       {showSlotChoiceModal && (
         <Dialog open={showSlotChoiceModal} onOpenChange={setShowSlotChoiceModal}>
@@ -1344,12 +1516,12 @@ export function EnhancedAdminCalendar() {
                   onClick={() => handleSlotChoiceSelection("court")}
                 >
                   <div>
-                    <div className="font-semibold">Просто корт</div>
+                    <div className="font-semibold">Бронирование корта</div>
                     <div className="text-sm text-gray-500">Обычное бронирование корта</div>
                   </div>
                 </Button>
                 <Button
-                  className="h-16 text-left justify-start bg-purple-600 hover:bg-purple-700"
+                  className="h-16 text-left justify-start bg-green-600 hover:bg-green-700"
                   onClick={() => handleSlotChoiceSelection("training")}
                 >
                   <div>
@@ -1435,7 +1607,7 @@ export function EnhancedAdminCalendar() {
         </Dialog>
       )}
 
-      {/* Booking Creation Modal */}
+      {/* Enhanced Booking Creation Modal with Training Option */}
       {showBookingModal && (
         <Dialog open={showBookingModal} onOpenChange={setShowBookingModal}>
           <DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto">
@@ -1443,6 +1615,49 @@ export function EnhancedAdminCalendar() {
               <DialogTitle>Создать бронирование</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleBookingSubmit} className="space-y-4">
+              {/* Booking Type Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Тип бронирования</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    type="button"
+                    variant={newBooking.bookingType === "court" ? "default" : "outline"}
+                    onClick={() => setNewBooking({ ...newBooking, bookingType: "court" })}
+                    className="h-12"
+                  >
+                    Бронирование корта
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={newBooking.bookingType === "training_with_coach" ? "default" : "outline"}
+                    onClick={() => setNewBooking({ ...newBooking, bookingType: "training_with_coach" })}
+                    className="h-12 bg-green-600 hover:bg-green-700"
+                  >
+                    Тренировка с тренером
+                  </Button>
+                </div>
+              </div>
+
+              {/* Coach Selection for training bookings */}
+              {newBooking.bookingType === "training_with_coach" && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Тренер *</label>
+                  <select
+                    required
+                    value={newBooking.coachId}
+                    onChange={(e) => setNewBooking({ ...newBooking, coachId: e.target.value })}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Выберите тренера</option>
+                    {COACHES.map((coach) => (
+                      <option key={coach.id} value={coach.id}>
+                        {coach.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Client Selection */}
               <div>
                 <label className="block text-sm font-medium mb-2">Клиент</label>

@@ -27,7 +27,7 @@ interface Court {
   basePrice: number
 }
 
-// Demo Data
+// Demo Data - Updated to July 2025
 const COURTS: Court[] = [
   { id: "1", name: "Корт 1 (Хард)", type: "hard", basePrice: 600 },
   { id: "2", name: "Корт 2 (Хард)", type: "hard", basePrice: 480 },
@@ -40,7 +40,7 @@ const DEMO_BOOKINGS: Booking[] = [
   {
     id: "1",
     courtId: "2",
-    date: "2024-06-29",
+    date: "2025-07-03",
     timeSlots: ["08:30", "09:00"],
     duration: 60,
     clientName: "Анна Петрова",
@@ -53,7 +53,7 @@ const DEMO_BOOKINGS: Booking[] = [
   {
     id: "2",
     courtId: "2",
-    date: "2024-06-29",
+    date: "2025-07-03",
     timeSlots: ["09:30", "10:00"],
     duration: 60,
     clientName: "Михаил Иванов",
@@ -66,7 +66,7 @@ const DEMO_BOOKINGS: Booking[] = [
   {
     id: "3",
     courtId: "1",
-    date: "2024-06-29",
+    date: "2025-07-03",
     timeSlots: ["14:00", "14:30"],
     duration: 60,
     clientName: "Елена Сидорова",
@@ -79,7 +79,7 @@ const DEMO_BOOKINGS: Booking[] = [
   {
     id: "4",
     courtId: "3",
-    date: "2024-06-29",
+    date: "2025-07-03",
     timeSlots: ["18:00", "18:30"],
     duration: 60,
     clientName: "Дмитрий Козлов",
@@ -110,7 +110,7 @@ interface NewBooking {
 }
 
 export default function AdminCalendar() {
-  const [selectedDate, setSelectedDate] = useState("2024-06-29")
+  const [selectedDate, setSelectedDate] = useState("2025-07-03")
   const [courtTypeFilter, setCourtTypeFilter] = useState<"all" | "hard" | "clay" | "indoor">("all")
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -267,7 +267,7 @@ export default function AdminCalendar() {
             <span className="text-xs font-medium text-gray-600">Время</span>
           </div>
 
-          {/* Court headers (sticky) */}
+          {/* Court headers (sticky) with updated price format */}
           {filteredCourts.map((court) => (
             <div
               key={court.id}
@@ -275,7 +275,7 @@ export default function AdminCalendar() {
             >
               <div>
                 <div className="font-semibold">{court.name}</div>
-                <div className="text-xs text-gray-500">от {court.basePrice}₽</div>
+                <div className="text-xs text-gray-500">от {court.basePrice}₽ /30 мин</div>
               </div>
             </div>
           ))}
@@ -307,16 +307,20 @@ export default function AdminCalendar() {
                     }`}
                   >
                     {booking && isFirstSlot ? (
-                      <div className="p-2 h-full flex flex-col justify-center">
-                        <div className="font-medium truncate text-xs">{booking.clientName}</div>
-                        <div className="text-xs opacity-90">{booking.duration} мин</div>
-                        <div className="text-xs font-semibold">{booking.totalPrice}₽</div>
-                        {booking.status === "pending" && <div className="text-xs opacity-75">Ожидает</div>}
+                      <div className="p-2 h-full flex flex-col justify-center items-center text-center">
+                        <div className="font-medium truncate text-xs text-white drop-shadow-sm">
+                          {booking.clientName}
+                        </div>
+                        <div className="text-xs opacity-90 text-white drop-shadow-sm">{booking.duration} мин</div>
+                        <div className="text-xs font-semibold text-white drop-shadow-sm">{booking.totalPrice}₽</div>
+                        {booking.status === "pending" && (
+                          <div className="text-xs opacity-75 text-white drop-shadow-sm">Ожидает</div>
+                        )}
                       </div>
                     ) : booking ? (
                       <div className="h-full bg-gray-400 opacity-50"></div>
                     ) : (
-                      <div className="p-2 h-full flex flex-col justify-center text-gray-600">
+                      <div className="p-2 h-full flex flex-col justify-center items-center text-center text-gray-600">
                         <div className="font-medium">{slotPrice}₽</div>
                         <div className="text-xs">30 мин</div>
                       </div>
